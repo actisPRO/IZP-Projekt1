@@ -111,7 +111,7 @@ int main(int argc, char *argv[]) {
             }
         }
 
-    } // todo: use while cycle
+    } // todo: use while cycle, check args
 
     if (mode == MODE_NONE) {
         printf("ERROR: no commands were specified");
@@ -138,10 +138,24 @@ int main(int argc, char *argv[]) {
         }
     }
 
-    // we'll perform commands on the first line
+    // we'll perform commands
     char *commandsToPerform = commands;
     char *savePtr_NC;
     char *nextCommand = strtok_r(commandsToPerform, ";", &savePtr_NC);
+
+    int irowLines[255] = {0}; // numbers of lines on which irow was performed
+    int drowRows[255] = {0}; // numbers of rows deleted with drow and drows
+    int icolCols[255] = {0}; // numbers of cols added with icol
+    int dcolCols[255] = {0}; // numbers of columns deleted with dcol and dcols
+
+    int arowCount = 0; // amount of arow commands
+    int acolCount = 0; // amount of acol commands
+
+    int i_drowRows = 0; // current index in drowRows
+    int i_irowLines = 0; // current index in irowLines
+    int i_icolCols = 0; // current index in icolCols
+    int i_dcolCols = 0; // current index in dcolCols
+
     while (nextCommand != NULL) {
         // read args
         char *savePtr_NA;
@@ -149,6 +163,37 @@ int main(int argc, char *argv[]) {
         strtok_r(nextCommand, " ", &savePtr_NA);
         arg0 = atoi(strtok_r(NULL, " ", &savePtr_NA));
         arg1 = atoi(strtok_r(NULL, " ", &savePtr_NA));
+
+        if (strcmp(nextCommand, "arow") == 0)
+            ++arowCount;
+        else if (strcmp(nextCommand, "acol") == 0)
+            ++acolCount;
+        else if (strcmp(nextCommand, "irow") == 0) {
+            irowLines[i_irowLines] = arg0;
+            ++i_irowLines;
+        } else if (strcmp(nextCommand, "icol") == 0) {
+            icolCols[i_icolCols] = arg0;
+            ++i_icolCols;
+        } else if (strcmp(nextCommand, "drow") == 0) {
+            drowRows[i_drowRows] = arg0;
+            ++i_drowRows;
+        } else if (strcmp(nextCommand, "dcol") == 0) {
+            dcolCols[i_dcolCols] = arg0;
+            ++i_dcolCols;
+        } else if (strcmp(nextCommand, "drows") == 0) {
+            for (int i = arg0; i <= arg1; ++i) {
+                drowRows[i_drowRows] = i;
+                ++i_drowRows;
+            }
+        } else if (strcmp(nextCommand, "dcols") == 0) {
+            for (int i = arg0; i <= arg1; ++i) {
+                dcolCols[i_dcolCols] = i;
+                ++i_dcolCols;
+            }
+        } else {
+            printf("ERROR: unexpected unknown command '%s'", nextCommand);
+            return EXIT_FAILURE;
+        }
 
         nextCommand = strtok_r(NULL, ";", &savePtr_NC);
     }
