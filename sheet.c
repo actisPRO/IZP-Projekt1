@@ -13,12 +13,13 @@ char *delims = " ";
 
 // array of table change commands with no args
 const char *tc_noargs[] = {
-        "irow",
-        "acol"
+        "acol",
+        "arow"
 };
 
 // array of table change commands with 1 arg
 const char *tc_1arg[] = {
+        "irow",
         "drow",
         "icol",
         "dcol"
@@ -35,8 +36,6 @@ int main(int argc, char *argv[]) {
         printf("ERROR: no arguments were specified");
         return EXIT_FAILURE;
     }
-
-    char inputBuffer[STR_MAX_LEN];
 
     // parsing arguments
     // modes are edit table and edit data.
@@ -111,16 +110,52 @@ int main(int argc, char *argv[]) {
                 mode = MODE_EDIT_TABLE;
             }
         }
-    }
+
+    } // todo: use while cycle
 
     if (mode == MODE_NONE) {
         printf("ERROR: no commands were specified");
         return EXIT_FAILURE;
     }
 
-    int lastLineNumber = 0;
+    int currentLine = 1;
+    int columnsAmount = 0;
+    int normalColumnsAmount = 0; // amount of columns in the first row
+
+    char inputBuffer[STR_MAX_LEN];
+    char outputBuffer[STR_MAX_LEN] = {0};
+
+    //we'll calculate amount of columns (according to the first line)
+    if (!fgets(inputBuffer, sizeof(inputBuffer), stdin)) {
+        printf("ERROR: input was empty!");
+        return EXIT_FAILURE;
+    }
+    else {
+        char *token = strtok(inputBuffer, delims);
+        while (token != NULL) {
+            ++normalColumnsAmount;
+            token = strtok(NULL, delims);
+        }
+    }
+
+    // we'll perform commands on the first line
+    char *commandsToPerform = commands;
+    char *savePtr_NC;
+    char *nextCommand = strtok_r(commandsToPerform, ";", &savePtr_NC);
+    while (nextCommand != NULL) {
+        // read args
+        char *savePtr_NA;
+        int arg0, arg1;
+        strtok_r(nextCommand, " ", &savePtr_NA);
+        arg0 = atoi(strtok_r(NULL, " ", &savePtr_NA));
+        arg1 = atoi(strtok_r(NULL, " ", &savePtr_NA));
+
+        nextCommand = strtok_r(NULL, ";", &savePtr_NC);
+    }
+
+    // magic is here
     while (fgets(inputBuffer, sizeof(inputBuffer), stdin)) {
-        //printf("%s", inputBuffer);
+        printf("%s", inputBuffer);
     }
 
     return 0;
