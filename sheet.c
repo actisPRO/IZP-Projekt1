@@ -118,12 +118,96 @@ int main(int argc, char *argv[]) {
         return EXIT_FAILURE;
     }
 
-    int currentLine = 1;
+    char input[STR_MAX_LEN] = {0};
+
+    int currRow = 1;
+
+    // get changed columns
+    // sequence icol 1; dcol 1 means that nothing will change. dcol 1; icol 1 means that col 1 will be empty (!= icol 1)
+    char *commandBuffer = commands;
+
+    char *savePtr_NC;
+    char *nextCommand = strtok_r(commandBuffer, ";", &savePtr_NC);
+
+    int inserted[105] = {0}, i_inserted = 0;
+    int deleted[105] = {0}, i_deleted = 0;
+    int empty[105] = {0}, i_empty = 0;
+    while (nextCommand != NULL) {
+        char *savePtr_NA;
+        int arg0, arg1;
+        strtok_r(nextCommand, " ", &savePtr_NA);
+        arg0 = atoi(strtok_r(NULL, " ", &savePtr_NA));
+        arg1 = atoi(strtok_r(NULL, " ", &savePtr_NA));
+
+        if (strcmp(nextCommand, "icol") == 0) {
+            // we check deleted if there is inserted column, so we can empty it
+            int isEmpty = 0;
+            for (int i = 0; i < 105; ++i) {
+                if (deleted[i] == arg0) {
+                    deleted[i] = 0; // remove it from the deleted list
+                    empty[i_empty] = arg0; // add to empty
+                    ++i_empty;
+                    isEmpty = 1;
+                    break;
+                }
+            }
+
+            if (!isEmpty) {
+                inserted[i_inserted] = arg0;
+                ++i_inserted;
+            }
+        } else if (strcmp(nextCommand, "dcol") == 0) {
+            int isInserted = 0, isEmpty = 0;
+            for (int i = 0; i < 105; ++i) {
+                if (inserted[i] == arg0) {
+                    inserted[i] = 0; // remove it from the inserted list
+                    isInserted = 1;
+                    break;
+                }
+                if (empty[i] == arg0) {
+                    empty[i] = 0;
+                    isEmpty = 1;
+                    break;
+                }
+            }
+
+            if (!isEmpty && !isInserted) {
+                deleted[i_deleted] = arg0;
+                ++i_deleted;
+            }
+        }
+
+        nextCommand = strtok_r(NULL, ";", &savePtr_NC);
+    }
+
+    // start parsing string
+    while (fgets(input, STR_MAX_LEN, stdin)) {
+        int currColumn = 1;
+        char columns[105][100] = {0};
+
+        for (int i = 0; i < strlen(delims); ++i) { // strtok will ignore the first column if it's empty, so we have to add it manually
+            if (input[0] == delims[i]) {
+                strcpy(columns[0], "");
+                ++currColumn;
+                break;
+            }
+        }
+
+        char *savePtr;
+        char *column = strtok_r(input, delims, &savePtr);
+        while (column != NULL) {
+            strcpy(columns[currColumn - 1], column);
+            column = strtok_r(NULL, delims, &savePtr);
+            ++currColumn;
+        }
+    }
+
+    /*int currentRow = 1;
     int columnsAmount = 0;
     int normalColumnsAmount = 0; // amount of columns in the first row
 
     char inputBuffer[STR_MAX_LEN];
-    char outputBuffer[STR_MAX_LEN] = {0};
+    char outputBuffer[STR_MAX_LEN + 100] = {0};
 
     //we'll calculate amount of columns (according to the first line)
     if (!fgets(inputBuffer, sizeof(inputBuffer), stdin)) {
@@ -131,7 +215,10 @@ int main(int argc, char *argv[]) {
         return EXIT_FAILURE;
     }
     else {
-        char *token = strtok(inputBuffer, delims);
+        char buffer[STR_MAX_LEN];
+        strcpy(buffer, inputBuffer);
+
+        char *token = strtok(buffer, delims);
         while (token != NULL) {
             ++normalColumnsAmount;
             token = strtok(NULL, delims);
@@ -143,19 +230,21 @@ int main(int argc, char *argv[]) {
     char *savePtr_NC;
     char *nextCommand = strtok_r(commandsToPerform, ";", &savePtr_NC);
 
-    int irowLines[255] = {0}; // numbers of lines on which irow was performed
-    int drowRows[255] = {0}; // numbers of rows deleted with drow and drows
-    int icolCols[255] = {0}; // numbers of cols added with icol
-    int dcolCols[255] = {0}; // numbers of columns deleted with dcol and dcols
+    // command data
+    int irowRows[256] = {0}; // numbers of rows on which irow was performed
+    int drowRows[256] = {0}; // numbers of rows deleted with drow and drows
+    int icolCols[256] = {0}; // numbers of cols added with icol
+    int dcolCols[256] = {0}; // numbers of columns deleted with dcol and dcols
 
     int arowCount = 0; // amount of arow commands
     int acolCount = 0; // amount of acol commands
 
     int i_drowRows = 0; // current index in drowRows
-    int i_irowLines = 0; // current index in irowLines
+    int i_irowRows = 0; // current index in irowRows
     int i_icolCols = 0; // current index in icolCols
     int i_dcolCols = 0; // current index in dcolCols
 
+    // getting command data
     while (nextCommand != NULL) {
         // read args
         char *savePtr_NA;
@@ -169,8 +258,8 @@ int main(int argc, char *argv[]) {
         else if (strcmp(nextCommand, "acol") == 0)
             ++acolCount;
         else if (strcmp(nextCommand, "irow") == 0) {
-            irowLines[i_irowLines] = arg0;
-            ++i_irowLines;
+            irowRows[i_irowRows] = arg0;
+            ++i_irowRows;
         } else if (strcmp(nextCommand, "icol") == 0) {
             icolCols[i_icolCols] = arg0;
             ++i_icolCols;
@@ -198,10 +287,104 @@ int main(int argc, char *argv[]) {
         nextCommand = strtok_r(NULL, ";", &savePtr_NC);
     }
 
-    // magic is here
-    while (fgets(inputBuffer, sizeof(inputBuffer), stdin)) {
-        printf("%s", inputBuffer);
+    // at first we should run commands on the first string
+    normalColumnsAmount += acolCount;
+
+    char *savePtr_COL;
+    char *column = strtok_r(inputBuffer, delims, &savePtr_COL);
+
+    int currCol = 1;
+    while (column != NULL) {
+        for (int i = 0; i < 256; ++i) { // adding icol cols
+            if (icolCols[i] == currCol) {
+                sprintf(outputBuffer, "%s%c", outputBuffer, delims[0]);
+                ++currCol;
+                ++normalColumnsAmount;
+            }
+        }
+
+        int display = 1;
+        for (int i = 0; i < 256; ++i) {
+            if (dcolCols[i] == currCol) {
+                display = 0;
+                --currCol;
+                --normalColumnsAmount;
+                break;
+            }
+        }
+
+        if (display == 1) {
+            if (currCol < normalColumnsAmount) {
+                sprintf(outputBuffer, "%s%s%c", outputBuffer, column, delims[0]);
+            } else { // protect from delim on the end
+                sprintf(outputBuffer, "%s%s", outputBuffer, column);
+            }
+        }
+
+        ++currCol;
+        column = strtok_r(NULL, delims, &savePtr_COL);
     }
+
+    printf("%s", outputBuffer);
+
+    /*int deletions = 0; // amount of deletions
+    for (int i = 0; i < 256; ++i) {
+        if (drowRows[i] == currentRow) {
+            ++deletions;
+        }
+    }
+
+    int additions = 0; // amount of irow's
+    for (int i = 0; i < 256; ++i) {
+        if (irowRows[i] == currentRow) {
+            ++additions;
+        }
+    }
+
+    for (int i = 0; i < additions - deletions; ++i) {
+        for (int j = 1; j < normalColumnsAmount; ++j) {
+        }
+        sprintf(outputBuffer, "%s\n", outputBuffer);
+    }
+
+    // magic is here (conflict resolving: irow 1 drow 1 == drow 1 irow 1)
+    while (fgets(inputBuffer, sizeof(inputBuffer), stdin)) {
+        sprintf(outputBuffer, "");
+        column = strtok_r(inputBuffer, delims, &savePtr_COL);
+
+        currCol = 1;
+        while (column != NULL) {
+            for (int i = 0; i < 256; ++i) { // adding icol cols
+                if (icolCols[i] == currCol) {
+                    sprintf(outputBuffer, "%s%c", outputBuffer, delims[0]);
+                    ++currCol;
+                    ++normalColumnsAmount;
+                }
+            }
+
+            int display = 1;
+            for (int i = 0; i < 256; ++i) {
+                if (dcolCols[i] == currCol) {
+                    display = 0;
+                    --normalColumnsAmount;
+                    break;
+                }
+            }
+
+            if (display == 1) {
+                if (currCol <= normalColumnsAmount) {
+                    sprintf(outputBuffer, "%s%s%c", outputBuffer, column, delims[0]);
+                } else { // protect from delim on the end
+                    sprintf(outputBuffer, "%s%s", outputBuffer, column);
+                }
+            }
+
+            ++currCol;
+            column = strtok_r(NULL, delims, &savePtr_COL);
+        }
+
+        printf("%s", outputBuffer);
+    }*/
 
     return 0;
 }
