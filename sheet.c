@@ -31,6 +31,16 @@ char *tc_2arg[] = {
         "dcols"
 };
 
+// string split function (because strtok_r is not supported)
+char* strspl(char *str, char *delimeters, char **temp) {
+    if (str == NULL) {
+        str = *temp;
+    }
+
+
+}
+
+//todo rewrite without strtok_r
 int main(int argc, char *argv[]) {
     if (argc == 1) {
         printf("ERROR: no arguments were specified");
@@ -40,7 +50,8 @@ int main(int argc, char *argv[]) {
     // parsing arguments
     // modes are edit table and edit data.
     int mode = MODE_NONE;
-    char commands[255] = {0}; // sequence of commands (separated with ;)
+    char commands[255][100] = {0}; // sequence of commands
+    int i_commands = 0; // index in commands
 
     for (int i = 1; i < argc; ++i) {
         // parse delimiters
@@ -75,7 +86,8 @@ int main(int argc, char *argv[]) {
                 }
 
                 // add command to the sequence
-                sprintf(commands, "%s%s %s %s;", commands, argv[i], argv[i + 1], argv[i + 2]);
+                sprintf(commands[i_commands], "%s %s %s", argv[i], argv[i + 1], argv[i + 2]);
+                ++i_commands;
                 mode = MODE_EDIT_TABLE;
             }
         }
@@ -97,7 +109,8 @@ int main(int argc, char *argv[]) {
                 }
 
                 // add command to the sequence
-                sprintf(commands, "%s%s %s;", commands, argv[i], argv[i + 1]);
+                sprintf(commands[i_commands], "%s %s", argv[i], argv[i + 1]);
+                ++i_commands;
                 mode = MODE_EDIT_TABLE;
             }
         }
@@ -106,7 +119,7 @@ int main(int argc, char *argv[]) {
         for (int j = 0; j < (int) (sizeof(tc_noargs) / sizeof(tc_noargs[0])); ++j) {
             if (strcmp(argv[i], tc_noargs[j]) == 0) {
                 // add command to the sequence
-                sprintf(commands, "%s%s;", commands, argv[i]);
+                sprintf(commands[i_commands], "%s", argv[i]);
                 mode = MODE_EDIT_TABLE;
             }
         }
@@ -121,7 +134,7 @@ int main(int argc, char *argv[]) {
     char input[STR_MAX_LEN] = {0};
 
     int currRow = 1;
-    int normalColumnCount = 0;
+    int renderColumns = 0; // amount of columns to render
     int originalColumnCount = 0; //amount of columns before modifications
 
     // start parsing rows
@@ -129,7 +142,7 @@ int main(int argc, char *argv[]) {
         int currColumn = 0;
         char columns[105][100] = {0};
 
-        for (int i = 0; i < strlen(delims); ++i) { // strtok will ignore the first column if it's empty, so we have to add it manually
+        for (int i = 0; i < (int) strlen(delims); ++i) { // strtok will ignore the first column if it's empty, so we have to add it manually
             if (input[0] == delims[i]) {
                 strcpy(columns[0], "");
                 ++currColumn;
@@ -146,47 +159,44 @@ int main(int argc, char *argv[]) {
         }
         int columnCount = currColumn;
         if (currRow == 1) {
-            normalColumnCount = columnCount;
+            renderColumns = columnCount;
             originalColumnCount = columnCount;
         }
 
-        // now perform column commands
-        char commandBuffer[255];
-        strcpy(commandBuffer, commands);
-        char *savePtr_NC;
-        char *nextCommand = strtok_r(commandBuffer, ";", &savePtr_NC);
-        while (nextCommand != NULL) {
-            // parse args
-            char *savePtr_NA;
-            int arg0, arg1;
-            strtok_r(nextCommand, " ", &savePtr_NA);
-            arg0 = atoi(strtok_r(NULL, " ", &savePtr_NA));
-            arg1 = atoi(strtok_r(NULL, " ", &savePtr_NA));
+        // now run column commands
+        for (int ci = 0; ci < i_commands; ++ci) {
+            char nextCommand[100];
+            strcpy(nextCommand, commands[ci]);
 
-            // perform command
-            if (strcmp(nextCommand, "icol") == 0) {
-                if (arg0 <= normalColumnCount) { // argument > amount of columns => ignore;
-                    if (currRow == 1) ++normalColumnCount;
+            int arg0, arg1;
+            char* nextCommandName = strtok(nextCommand, " ");
+            arg0 = atoi(strtok(NULL, " "));
+            arg1 = atoi(strtok(NULL, " "));
+
+            // run command
+            if (strcmp(nextCommandName, "icol") == 0) {
+                if (arg0 <= renderColumns) { // argument > amount of columns => ignore;
+                    if (currRow == 1) ++renderColumns;
                     // copy content from each column to the next one. arg0 - 1 because array of columns starts with 0, but tables' indexes start with 1
-                    for (int i = normalColumnCount; i > arg0 - 1; --i) {
+                    for (int i = renderColumns; i > arg0 - 1; --i) {
                         strcpy(columns[i], columns[i - 1]);
                     }
 
                     strcpy(columns[arg0 - 1], ""); // new empty column
                 }
             }
-            else if (strcmp(nextCommand, "dcol") == 0) {
-                if (arg0 <= normalColumnCount) {
+            else if (strcmp(nextCommandName, "dcol") == 0) {
+                if (arg0 <= originalColumnCount) {
                     // copy content
-                    for (int i = arg0 - 1; i <= normalColumnCount; ++i) {
+                    for (int i = arg0 - 1; i <= originalColumnCount; ++i) {
                         strcpy(columns[i], columns[i + 1]);
                     }
 
                     // decrease table length
-                    if (currRow == 1) --normalColumnCount;
+                    if (currRow == 1) --renderColumns;
                 }
             }
-            else if (strcmp(nextCommand, "dcols") == 0) {
+            else if (strcmp(nextCommandName, "dcols") == 0) {
                 if (arg1 > originalColumnCount) arg1 = originalColumnCount;
                 int removedCols = arg1 - arg0 + 1;
 
@@ -194,203 +204,18 @@ int main(int argc, char *argv[]) {
                     strcpy(columns[i], columns[i + removedCols]);
                 }
 
-                if (currRow == 1) normalColumnCount -= removedCols;
+                if (currRow == 1) renderColumns -= removedCols;
             }
-
-            nextCommand = strtok_r(NULL, ";", &savePtr_NC);
         }
 
-        for (int i = 0; i < normalColumnCount; ++i) {
-            printf("Column %d: %s ", i + 1, columns[i][0] == '\0' ? "empty" : columns[i]);
+        for (int i = 0; i < renderColumns; ++i) {
+            if (i == renderColumns - 1) printf("%s", columns[i]);
+            else printf("%s%c", columns[i], delims[0]);
         }
-        printf("\n");
+        //printf("\n");
 
         ++currRow;
     } // todo check if final col is empty, control row length
-
-    /*int currentRow = 1;
-    int columnsAmount = 0;
-    int normalColumnsAmount = 0; // amount of columns in the first row
-
-    char inputBuffer[STR_MAX_LEN];
-    char outputBuffer[STR_MAX_LEN + 100] = {0};
-
-    //we'll calculate amount of columns (according to the first line)
-    if (!fgets(inputBuffer, sizeof(inputBuffer), stdin)) {
-        printf("ERROR: input was empty!");
-        return EXIT_FAILURE;
-    }
-    else {
-        char buffer[STR_MAX_LEN];
-        strcpy(buffer, inputBuffer);
-
-        char *token = strtok(buffer, delims);
-        while (token != NULL) {
-            ++normalColumnsAmount;
-            token = strtok(NULL, delims);
-        }
-    }
-
-    // we'll perform commands
-    char *commandsToPerform = commands;
-    char *savePtr_NC;
-    char *nextCommand = strtok_r(commandsToPerform, ";", &savePtr_NC);
-
-    // command data
-    int irowRows[256] = {0}; // numbers of rows on which irow was performed
-    int drowRows[256] = {0}; // numbers of rows deleted with drow and drows
-    int icolCols[256] = {0}; // numbers of cols added with icol
-    int dcolCols[256] = {0}; // numbers of columns deleted with dcol and dcols
-
-    int arowCount = 0; // amount of arow commands
-    int acolCount = 0; // amount of acol commands
-
-    int i_drowRows = 0; // current index in drowRows
-    int i_irowRows = 0; // current index in irowRows
-    int i_icolCols = 0; // current index in icolCols
-    int i_dcolCols = 0; // current index in dcolCols
-
-    // getting command data
-    while (nextCommand != NULL) {
-        // read args
-        char *savePtr_NA;
-        int arg0, arg1;
-        strtok_r(nextCommand, " ", &savePtr_NA);
-        arg0 = atoi(strtok_r(NULL, " ", &savePtr_NA));
-        arg1 = atoi(strtok_r(NULL, " ", &savePtr_NA));
-
-        if (strcmp(nextCommand, "arow") == 0)
-            ++arowCount;
-        else if (strcmp(nextCommand, "acol") == 0)
-            ++acolCount;
-        else if (strcmp(nextCommand, "irow") == 0) {
-            irowRows[i_irowRows] = arg0;
-            ++i_irowRows;
-        } else if (strcmp(nextCommand, "icol") == 0) {
-            icolCols[i_icolCols] = arg0;
-            ++i_icolCols;
-        } else if (strcmp(nextCommand, "drow") == 0) {
-            drowRows[i_drowRows] = arg0;
-            ++i_drowRows;
-        } else if (strcmp(nextCommand, "dcol") == 0) {
-            dcolCols[i_dcolCols] = arg0;
-            ++i_dcolCols;
-        } else if (strcmp(nextCommand, "drows") == 0) {
-            for (int i = arg0; i <= arg1; ++i) {
-                drowRows[i_drowRows] = i;
-                ++i_drowRows;
-            }
-        } else if (strcmp(nextCommand, "dcols") == 0) {
-            for (int i = arg0; i <= arg1; ++i) {
-                dcolCols[i_dcolCols] = i;
-                ++i_dcolCols;
-            }
-        } else {
-            printf("ERROR: unexpected unknown command '%s'", nextCommand);
-            return EXIT_FAILURE;
-        }
-
-        nextCommand = strtok_r(NULL, ";", &savePtr_NC);
-    }
-
-    // at first we should run commands on the first string
-    normalColumnsAmount += acolCount;
-
-    char *savePtr_COL;
-    char *column = strtok_r(inputBuffer, delims, &savePtr_COL);
-
-    int currCol = 1;
-    while (column != NULL) {
-        for (int i = 0; i < 256; ++i) { // adding icol cols
-            if (icolCols[i] == currCol) {
-                sprintf(outputBuffer, "%s%c", outputBuffer, delims[0]);
-                ++currCol;
-                ++normalColumnsAmount;
-            }
-        }
-
-        int display = 1;
-        for (int i = 0; i < 256; ++i) {
-            if (dcolCols[i] == currCol) {
-                display = 0;
-                --currCol;
-                --normalColumnsAmount;
-                break;
-            }
-        }
-
-        if (display == 1) {
-            if (currCol < normalColumnsAmount) {
-                sprintf(outputBuffer, "%s%s%c", outputBuffer, column, delims[0]);
-            } else { // protect from delim on the end
-                sprintf(outputBuffer, "%s%s", outputBuffer, column);
-            }
-        }
-
-        ++currCol;
-        column = strtok_r(NULL, delims, &savePtr_COL);
-    }
-
-    printf("%s", outputBuffer);
-
-    /*int deletions = 0; // amount of deletions
-    for (int i = 0; i < 256; ++i) {
-        if (drowRows[i] == currentRow) {
-            ++deletions;
-        }
-    }
-
-    int additions = 0; // amount of irow's
-    for (int i = 0; i < 256; ++i) {
-        if (irowRows[i] == currentRow) {
-            ++additions;
-        }
-    }
-
-    for (int i = 0; i < additions - deletions; ++i) {
-        for (int j = 1; j < normalColumnsAmount; ++j) {
-        }
-        sprintf(outputBuffer, "%s\n", outputBuffer);
-    }
-
-    // magic is here (conflict resolving: irow 1 drow 1 == drow 1 irow 1)
-    while (fgets(inputBuffer, sizeof(inputBuffer), stdin)) {
-        sprintf(outputBuffer, "");
-        column = strtok_r(inputBuffer, delims, &savePtr_COL);
-
-        currCol = 1;
-        while (column != NULL) {
-            for (int i = 0; i < 256; ++i) { // adding icol cols
-                if (icolCols[i] == currCol) {
-                    sprintf(outputBuffer, "%s%c", outputBuffer, delims[0]);
-                    ++currCol;
-                    ++normalColumnsAmount;
-                }
-            }
-
-            int display = 1;
-            for (int i = 0; i < 256; ++i) {
-                if (dcolCols[i] == currCol) {
-                    display = 0;
-                    --normalColumnsAmount;
-                    break;
-                }
-            }
-
-            if (display == 1) {
-                if (currCol <= normalColumnsAmount) {
-                    sprintf(outputBuffer, "%s%s%c", outputBuffer, column, delims[0]);
-                } else { // protect from delim on the end
-                    sprintf(outputBuffer, "%s%s", outputBuffer, column);
-                }
-            }
-
-            ++currCol;
-            column = strtok_r(NULL, delims, &savePtr_COL);
-        }
-
-        printf("%s", outputBuffer);
-    }*/
 
     return 0;
 }
