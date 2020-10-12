@@ -121,68 +121,11 @@ int main(int argc, char *argv[]) {
     char input[STR_MAX_LEN] = {0};
 
     int currRow = 1;
+    int normalColumnCount = 0;
 
-    // get changed columns
-    // sequence icol 1; dcol 1 means that nothing will change. dcol 1; icol 1 means that col 1 will be empty (!= icol 1)
-    char *commandBuffer = commands;
-
-    char *savePtr_NC;
-    char *nextCommand = strtok_r(commandBuffer, ";", &savePtr_NC);
-
-    int inserted[105] = {0}, i_inserted = 0;
-    int deleted[105] = {0}, i_deleted = 0;
-    int empty[105] = {0}, i_empty = 0;
-    while (nextCommand != NULL) {
-        char *savePtr_NA;
-        int arg0, arg1;
-        strtok_r(nextCommand, " ", &savePtr_NA);
-        arg0 = atoi(strtok_r(NULL, " ", &savePtr_NA));
-        arg1 = atoi(strtok_r(NULL, " ", &savePtr_NA));
-
-        if (strcmp(nextCommand, "icol") == 0) {
-            // we check deleted if there is inserted column, so we can empty it
-            int isEmpty = 0;
-            for (int i = 0; i < 105; ++i) {
-                if (deleted[i] == arg0) {
-                    deleted[i] = 0; // remove it from the deleted list
-                    empty[i_empty] = arg0; // add to empty
-                    ++i_empty;
-                    isEmpty = 1;
-                    break;
-                }
-            }
-
-            if (!isEmpty) {
-                inserted[i_inserted] = arg0;
-                ++i_inserted;
-            }
-        } else if (strcmp(nextCommand, "dcol") == 0) {
-            int isInserted = 0, isEmpty = 0;
-            for (int i = 0; i < 105; ++i) {
-                if (inserted[i] == arg0) {
-                    inserted[i] = 0; // remove it from the inserted list
-                    isInserted = 1;
-                    break;
-                }
-                if (empty[i] == arg0) {
-                    empty[i] = 0;
-                    isEmpty = 1;
-                    break;
-                }
-            }
-
-            if (!isEmpty && !isInserted) {
-                deleted[i_deleted] = arg0;
-                ++i_deleted;
-            }
-        }
-
-        nextCommand = strtok_r(NULL, ";", &savePtr_NC);
-    }
-
-    // start parsing string
+    // start parsing rows
     while (fgets(input, STR_MAX_LEN, stdin)) {
-        int currColumn = 1;
+        int currColumn = 0;
         char columns[105][100] = {0};
 
         for (int i = 0; i < strlen(delims); ++i) { // strtok will ignore the first column if it's empty, so we have to add it manually
@@ -196,11 +139,51 @@ int main(int argc, char *argv[]) {
         char *savePtr;
         char *column = strtok_r(input, delims, &savePtr);
         while (column != NULL) {
-            strcpy(columns[currColumn - 1], column);
+            strcpy(columns[currColumn], column);
             column = strtok_r(NULL, delims, &savePtr);
             ++currColumn;
         }
-    }
+        int columnCount = currColumn;
+        if (currRow == 1) {
+            normalColumnCount = columnCount;
+        }
+
+        // now perform column commands
+        char commandBuffer[255];
+        strcpy(commandBuffer, commands);
+        char *savePtr_NC;
+        char *nextCommand = strtok_r(commandBuffer, ";", &savePtr_NC);
+        while (nextCommand != NULL) {
+            // parse args
+            char *savePtr_NA;
+            int arg0, arg1;
+            strtok_r(nextCommand, " ", &savePtr_NA);
+            arg0 = atoi(strtok_r(NULL, " ", &savePtr_NA));
+            arg1 = atoi(strtok_r(NULL, " ", &savePtr_NA));
+
+            // perform command
+            if (strcmp(nextCommand, "icol") == 0) {
+                if (arg0 <= normalColumnCount) { // argument > amount of columns => ignore;
+                    if (currRow == 1) ++normalColumnCount;
+                    // copy content from every column to the next one. arg0 - 1 because array of columns starts with 0, but tables' indexes start with 1
+                    for (int i = normalColumnCount; i > arg0 - 1; --i) {
+                        strcpy(columns[i], columns[i - 1]);
+                    }
+
+                    strcpy(columns[arg0 - 1], ""); // new empty column
+                }
+            }
+
+            nextCommand = strtok_r(NULL, ";", &savePtr_NC);
+        }
+
+        for (int i = 0; i < normalColumnCount; ++i) {
+            printf("Column %d: %s ", i + 1, columns[i][0] == '\0' ? "empty" : columns[i]);
+        }
+        printf("\n");
+
+        ++currRow;
+    } // todo check if final col is empty
 
     /*int currentRow = 1;
     int columnsAmount = 0;

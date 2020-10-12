@@ -2,5 +2,4 @@
 /.idea/
 /CMakeLists.txt
 *.exe
-input.txt
-output.txt
+*.txt
