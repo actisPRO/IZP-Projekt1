@@ -209,14 +209,16 @@ int main(int argc, char *argv[]) {
                 }
             }
             else if (strcmp(nextCommandName, "dcols") == 0) {
-                if (arg1 > originalColumnCount) arg1 = originalColumnCount;
-                int removedCols = arg1 - arg0 + 1;
+                if (arg0 <= originalColumnCount) {
+                    if (arg1 > originalColumnCount) arg1 = originalColumnCount;
+                    int removedCols = arg1 - arg0 + 1;
 
-                for (int i = arg0 - 1; i <= columnCount; ++i) {
-                    strcpy(columns[i], columns[i + removedCols]);
+                    for (int i = arg0 - 1; i <= columnCount; ++i) {
+                        strcpy(columns[i], columns[i + removedCols]);
+                    }
+
+                    if (currRow == 1) renderColumns -= removedCols;
                 }
-
-                if (currRow == 1) renderColumns -= removedCols;
             }
         }
 
