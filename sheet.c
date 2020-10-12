@@ -31,6 +31,23 @@ char *tc_2arg[] = {
         "dcols"
 };
 
+// 0 - no args, 1 - 1 arg, 2 - 2 args
+int commandType(const char *name) {
+    for (int i = 0; i < (int) (sizeof(tc_2arg) / sizeof(tc_2arg[0])); ++i) {
+        if (strcmp(name, tc_2arg[i]) == 0) {
+            return 2;
+        }
+    }
+
+    for (int i = 0; i < (int) (sizeof(tc_1arg) / sizeof(tc_1arg[0])); ++i) {
+        if (strcmp(name, tc_1arg[i]) == 0) {
+            return 1;
+        }
+    }
+
+    return 0;
+}
+
 int main(int argc, char *argv[]) {
     if (argc == 1) {
         printf("ERROR: no arguments were specified");
@@ -159,14 +176,20 @@ int main(int argc, char *argv[]) {
 
             int arg0, arg1;
             char* nextCommandName = strtok(nextCommand, " ");
-            arg0 = atoi(strtok(NULL, " "));
-            arg1 = atoi(strtok(NULL, " "));
+            char *eptr;
+            // get args count to prevent segmentation fault
+            if (commandType(nextCommandName) >= 1) {
+                arg0 = strtol(strtok(NULL, " "), &eptr, 10);
+            }
+            if (commandType(nextCommandName) >= 2) {
+                arg1 = strtol(strtok(NULL, " "), &eptr, 10);
+            }
 
             // run command
             if (strcmp(nextCommandName, "icol") == 0) {
                 if (arg0 <= renderColumns) { // argument > amount of columns => ignore;
                     if (currRow == 1) ++renderColumns;
-                    // copy content from each column to the next one. arg0 - 1 because array of columns starts with 0, but tables' indexes start with 1
+                    // copy content from each column to the next one. arg0 - 1 because array of columns starts with 0, but table's indexes start with 1
                     for (int i = renderColumns; i > arg0 - 1; --i) {
                         strcpy(columns[i], columns[i - 1]);
                     }
