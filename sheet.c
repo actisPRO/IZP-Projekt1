@@ -31,16 +31,6 @@ char *tc_2arg[] = {
         "dcols"
 };
 
-// string split function (because strtok_r is not supported)
-char* strspl(char *str, char *delimeters, char **temp) {
-    if (str == NULL) {
-        str = *temp;
-    }
-
-
-}
-
-//todo rewrite without strtok_r
 int main(int argc, char *argv[]) {
     if (argc == 1) {
         printf("ERROR: no arguments were specified");
@@ -150,11 +140,10 @@ int main(int argc, char *argv[]) {
             }
         }
 
-        char *savePtr;
-        char *column = strtok_r(input, delims, &savePtr);
+        char *column = strtok(input, delims);
         while (column != NULL) {
             strcpy(columns[currColumn], column);
-            column = strtok_r(NULL, delims, &savePtr);
+            column = strtok(NULL, delims);
             ++currColumn;
         }
         int columnCount = currColumn;
