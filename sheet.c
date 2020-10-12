@@ -122,6 +122,7 @@ int main(int argc, char *argv[]) {
 
     int currRow = 1;
     int normalColumnCount = 0;
+    int originalColumnCount = 0; //amount of columns before modifications
 
     // start parsing rows
     while (fgets(input, STR_MAX_LEN, stdin)) {
@@ -146,6 +147,7 @@ int main(int argc, char *argv[]) {
         int columnCount = currColumn;
         if (currRow == 1) {
             normalColumnCount = columnCount;
+            originalColumnCount = columnCount;
         }
 
         // now perform column commands
@@ -165,13 +167,34 @@ int main(int argc, char *argv[]) {
             if (strcmp(nextCommand, "icol") == 0) {
                 if (arg0 <= normalColumnCount) { // argument > amount of columns => ignore;
                     if (currRow == 1) ++normalColumnCount;
-                    // copy content from every column to the next one. arg0 - 1 because array of columns starts with 0, but tables' indexes start with 1
+                    // copy content from each column to the next one. arg0 - 1 because array of columns starts with 0, but tables' indexes start with 1
                     for (int i = normalColumnCount; i > arg0 - 1; --i) {
                         strcpy(columns[i], columns[i - 1]);
                     }
 
                     strcpy(columns[arg0 - 1], ""); // new empty column
                 }
+            }
+            else if (strcmp(nextCommand, "dcol") == 0) {
+                if (arg0 <= normalColumnCount) {
+                    // copy content
+                    for (int i = arg0 - 1; i <= normalColumnCount; ++i) {
+                        strcpy(columns[i], columns[i + 1]);
+                    }
+
+                    // decrease table length
+                    if (currRow == 1) --normalColumnCount;
+                }
+            }
+            else if (strcmp(nextCommand, "dcols") == 0) {
+                if (arg1 > originalColumnCount) arg1 = originalColumnCount;
+                int removedCols = arg1 - arg0 + 1;
+
+                for (int i = arg0 - 1; i <= columnCount; ++i) {
+                    strcpy(columns[i], columns[i + removedCols]);
+                }
+
+                if (currRow == 1) normalColumnCount -= removedCols;
             }
 
             nextCommand = strtok_r(NULL, ";", &savePtr_NC);
@@ -183,7 +206,7 @@ int main(int argc, char *argv[]) {
         printf("\n");
 
         ++currRow;
-    } // todo check if final col is empty
+    } // todo check if final col is empty, control row length
 
     /*int currentRow = 1;
     int columnsAmount = 0;
