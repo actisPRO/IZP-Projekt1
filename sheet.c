@@ -184,6 +184,7 @@ int main (int argc, char *argv[])
   char input[STR_MAX_LEN] = {0};
 
   int currRow = 1;
+  int aRows = 0; // amount of rows added with arow
   int renderColumns = 0; // amount of columns to render
   int originalCols = 0;
   int original_cols_wacol = 0; //amount of columns before modifications, but with acols
@@ -348,6 +349,13 @@ int main (int argc, char *argv[])
                   ++emptyBeforeThis;
                 }
             }
+          else if (strcmp(nextCommandName, "arow") == 0)
+            {
+              if (currRow == 1)
+                {
+                  ++aRows;
+                }
+            }
         }
 
       for (int i = 1; i <= emptyBeforeThis; ++i)
@@ -367,6 +375,17 @@ int main (int argc, char *argv[])
 
       ++currRow;
     } // todo check if final col is empty, control row length
+
+  // render arows
+  for (int i = 1; i <= aRows; ++i)
+    {
+      // check if it isn't deleted
+      for (int j = 0; j < renderColumns; ++j)
+        {
+          printf("%c", delims[0]);
+        }
+      printf("\n");
+    }
 
   return 0;
 }
