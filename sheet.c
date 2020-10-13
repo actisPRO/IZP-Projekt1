@@ -120,6 +120,13 @@ int main (int argc, char *argv[])
                   return EXIT_FAILURE;
                 }
 
+              if (arg1 < arg0)
+                {
+                  printf("ERROR: argument #1 can't be bigger then argument #2\n");
+                  return EXIT_FAILURE;
+                }
+
+
               // add command to the sequence
               sprintf (commands[i_commands], "%s %s %s", argv[i], argv[i + 1], argv[i + 2]);
               ++i_commands;
