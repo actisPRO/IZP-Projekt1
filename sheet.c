@@ -87,7 +87,7 @@ int main (int argc, char *argv[])
         {
           if (i + 1 >= argc)
             { // index out of range (e.g. delimiter wasn't specified)
-              printf ("ERROR: delimiter was not specified in -d argument!");
+              printf ("ERROR: delimiter was not specified in -d argument!\n");
               return EXIT_FAILURE;
             }
           delims = argv[i + 1];
@@ -101,7 +101,7 @@ int main (int argc, char *argv[])
             {
               if (i + 1 >= argc || i + 2 >= argc)
                 {
-                  printf ("ERROR: incorrect amount of arguments for the command %s", argv[i]);
+                  printf ("ERROR: incorrect amount of arguments for the command %s\n", argv[i]);
                   return EXIT_FAILURE;
                 }
 
@@ -110,13 +110,13 @@ int main (int argc, char *argv[])
               long arg0 = strtol (argv[i + 1], &eptr, 10);
               if (arg0 == 0)
                 {
-                  printf ("ERROR: incorrect argument #1: %s for the command %s", argv[i + 1], argv[i]);
+                  printf ("ERROR: incorrect argument #1: %s for the command %s\n", argv[i + 1], argv[i]);
                   return EXIT_FAILURE;
                 }
               long arg1 = strtol (argv[i + 2], &eptr, 10);
               if (arg1 == 0)
                 {
-                  printf ("ERROR: incorrect argument #2: %s for the command %s", argv[i + 2], argv[i]);
+                  printf ("ERROR: incorrect argument #2: %s for the command %s\n", argv[i + 2], argv[i]);
                   return EXIT_FAILURE;
                 }
 
@@ -141,7 +141,7 @@ int main (int argc, char *argv[])
             {
               if (i + 1 >= argc)
                 {
-                  printf ("ERROR: incorrect amount of arguments for the command '%s'", argv[i]);
+                  printf ("ERROR: incorrect amount of arguments for the command '%s'\n", argv[i]);
                   return EXIT_FAILURE;
                 }
 
@@ -150,7 +150,7 @@ int main (int argc, char *argv[])
               long arg0 = strtol (argv[i + 1], &eptr, 10);
               if (arg0 == 0)
                 {
-                  printf ("ERROR: incorrect argument #1: %s for the command '%s'", argv[i + 1], argv[i]);
+                  printf ("ERROR: incorrect argument #1: %s for the command '%s'\n", argv[i + 1], argv[i]);
                   return EXIT_FAILURE;
                 }
 
@@ -177,7 +177,7 @@ int main (int argc, char *argv[])
 
   if (mode == MODE_NONE)
     {
-      printf ("ERROR: no commands were specified");
+      printf ("ERROR: no commands were specified\n");
       return EXIT_FAILURE;
     }
 
