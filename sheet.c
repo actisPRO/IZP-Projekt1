@@ -185,7 +185,8 @@ int main (int argc, char *argv[])
 
   int currRow = 1;
   int renderColumns = 0; // amount of columns to render
-  int originalColumnCount = 0; //amount of columns before modifications
+  int originalCols = 0;
+  int original_cols_wacol = 0; //amount of columns before modifications, but with acols
 
   // start parsing rows
   while (fgets (input, STR_MAX_LEN, stdin))
@@ -200,6 +201,11 @@ int main (int argc, char *argv[])
             {
               ++currColumn;
               continue;
+            }
+
+          if (currRow > 1 && currColumn >= originalCols) // if some row has more columns then the first row, we'll set values of all extra columns to \0
+            {
+              break;
             }
 
           if (!isDelim (input[i]) && input[i] != '\n' && input[i] != EOF)
@@ -236,7 +242,8 @@ int main (int argc, char *argv[])
       if (currRow == 1)
         {
           renderColumns = columnCount;
-          originalColumnCount = columnCount;
+          originalCols = columnCount;
+          original_cols_wacol = columnCount;
         }
 
       // now run column commands
@@ -275,10 +282,10 @@ int main (int argc, char *argv[])
             }
           else if (strcmp (nextCommandName, "dcol") == 0)
             {
-              if (arg0 <= originalColumnCount)
+              if (arg0 <= original_cols_wacol)
                 {
                   // copy content
-                  for (int i = arg0 - 1; i <= originalColumnCount; ++i)
+                  for (int i = arg0 - 1; i <= original_cols_wacol; ++i)
                     {
                       strcpy (columns[i], columns[i + 1]);
                     }
@@ -289,9 +296,9 @@ int main (int argc, char *argv[])
             }
           else if (strcmp (nextCommandName, "dcols") == 0)
             {
-              if (arg0 <= originalColumnCount)
+              if (arg0 <= original_cols_wacol)
                 {
-                  if (arg1 > originalColumnCount) arg1 = originalColumnCount;
+                  if (arg1 > original_cols_wacol) arg1 = original_cols_wacol;
                   int removedCols = arg1 - arg0 + 1;
 
                   for (int i = arg0 - 1; i <= columnCount; ++i)
@@ -306,12 +313,51 @@ int main (int argc, char *argv[])
             {
               if (currRow == 1)
                 {
-                  ++originalColumnCount;
+                  ++original_cols_wacol;
                   ++renderColumns;
                 }
             }
         }
 
+      // row commands
+      int emptyBeforeThis = 0; // amount of empty rows to render before current row
+      int renderThis = 1;
+      for (int ci = 0; ci < i_commands; ++ci)
+        {
+          char nextCommand[100];
+          strcpy (nextCommand, commands[ci]);
+
+          int arg0, arg1;
+          char *nextCommandName = strtok (nextCommand, " ");
+          char *eptr;
+          // get args count to prevent segmentation fault
+          if (commandType (nextCommandName) >= 1)
+            {
+              arg0 = strtol (strtok (NULL, " "), &eptr, 10);
+            }
+          if (commandType (nextCommandName) >= 2)
+            {
+              arg1 = strtol (strtok (NULL, " "), &eptr, 10);
+            }
+
+          if (strcmp(nextCommandName, "irow") == 0)
+            {
+              if (arg0 <= currRow && arg0 >= currRow - emptyBeforeThis)
+                {
+                  ++currRow;
+                  ++emptyBeforeThis;
+                }
+            }
+        }
+
+      for (int i = 1; i <= emptyBeforeThis; ++i)
+        {
+          for (int j = 0; j < renderColumns - 1; ++j)
+            {
+              printf("%c", delims[0]);
+            }
+          printf("\n");
+        }
       for (int i = 0; i < renderColumns; ++i)
         {
           if (i == renderColumns - 1) printf ("%s", columns[i]);
