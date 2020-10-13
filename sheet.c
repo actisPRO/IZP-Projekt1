@@ -80,6 +80,10 @@ int main(int argc, char* argv[])
     char commands[255][100] = { 0 }; // sequence of commands
     int i_commands = 0; // index in commands
 
+    int aRows = 0; // amount of rows added with arow
+    int deletedRows[1024] = {0};
+    int i_deletedRows = 0;
+
     for (int i = 1; i < argc; ++i)
     {
         // parse delimiters
@@ -170,6 +174,8 @@ int main(int argc, char* argv[])
                 sprintf(commands[i_commands], "%s", argv[i]);
                 ++i_commands;
                 mode = MODE_EDIT_TABLE;
+
+                if (strcmp(argv[i], "arow") == 0) ++aRows;
             }
         }
 
@@ -183,11 +189,12 @@ int main(int argc, char* argv[])
 
     char input[STR_MAX_LEN] = { 0 };
 
-    int currRow = 1;
-    int aRows = 0; // amount of rows added with arow
+    int currInputRow = 1; // current row based on input
+    int realRow = 1; // real row index
+
     int renderColumns = 0; // amount of columns to render
     int originalCols = 0;
-    int original_cols_wacol = 0; //amount of columns before modifications, but with acols
+    int colsWithAcol = 0; //amount of columns before modifications, but with acols
 
     // start parsing rows
     while (fgets(input, STR_MAX_LEN, stdin))
@@ -204,7 +211,7 @@ int main(int argc, char* argv[])
                 continue;
             }
 
-            if (currRow > 1 && currColumn
+            if (currInputRow > 1 && currColumn
                     >= originalCols) // if some row has more columns then the first row, we'll set values of all extra columns to \0
             {
                 break;
@@ -222,30 +229,12 @@ int main(int argc, char* argv[])
             }
         }
 
-        /*for (int i = 0; i < (int) strlen (delims); ++i)
-          { // strtok will ignore the first column if it's empty, so we have to add it manually
-            if (input[0] == delims[i])
-              {
-                strcpy (columns[0], "");
-                ++currColumn;
-                break;
-              }
-          }*/
-
-        /*char *column = strtok (input, delims);
-        while (column != NULL)
-          {
-            strcpy (columns[currColumn], column);
-            column = strtok (NULL, delims);
-            ++currColumn;
-          }
-        int columnCount = currColumn;*/
         int columnCount = currColumn;
-        if (currRow == 1)
+        if (currInputRow == 1)
         {
             renderColumns = columnCount;
             originalCols = columnCount;
-            original_cols_wacol = columnCount;
+            colsWithAcol = columnCount;
         }
 
         // now run column commands
@@ -272,7 +261,7 @@ int main(int argc, char* argv[])
             {
                 if (arg0 <= renderColumns)
                 { // argument > amount of columns => ignore;
-                    if (currRow == 1) ++renderColumns;
+                    if (currInputRow == 1) ++renderColumns;
                     // copy content from each column to the next one. arg0 - 1 because array of columns starts with 0, but table's indexes start with 1
                     for (int i = renderColumns; i > arg0 - 1; --i)
                     {
@@ -284,23 +273,23 @@ int main(int argc, char* argv[])
             }
             else if (strcmp(nextCommandName, "dcol") == 0)
             {
-                if (arg0 <= original_cols_wacol)
+                if (arg0 <= colsWithAcol)
                 {
                     // copy content
-                    for (int i = arg0 - 1; i <= original_cols_wacol; ++i)
+                    for (int i = arg0 - 1; i <= colsWithAcol; ++i)
                     {
                         strcpy(columns[i], columns[i + 1]);
                     }
 
                     // decrease table length
-                    if (currRow == 1) --renderColumns;
+                    if (currInputRow == 1) --renderColumns;
                 }
             }
             else if (strcmp(nextCommandName, "dcols") == 0)
             {
-                if (arg0 <= original_cols_wacol)
+                if (arg0 <= colsWithAcol)
                 {
-                    if (arg1 > original_cols_wacol) arg1 = original_cols_wacol;
+                    if (arg1 > colsWithAcol) arg1 = colsWithAcol;
                     int removedCols = arg1 - arg0 + 1;
 
                     for (int i = arg0 - 1; i <= columnCount; ++i)
@@ -308,22 +297,22 @@ int main(int argc, char* argv[])
                         strcpy(columns[i], columns[i + removedCols]);
                     }
 
-                    if (currRow == 1) renderColumns -= removedCols;
+                    if (currInputRow == 1) renderColumns -= removedCols;
                 }
             }
             else if (strcmp(nextCommandName, "acol") == 0)
             {
-                if (currRow == 1)
+                if (currInputRow == 1)
                 {
-                    ++original_cols_wacol;
+                    ++colsWithAcol;
                     ++renderColumns;
                 }
             }
         }
 
-        // row row commands
-        int emptyBeforeThis = 0; // amount of empty rows to render before current row
+        // row commands
         int renderThis = 1;
+        int emptyBeforeThis = 0;
         for (int ci = 0; ci < i_commands; ++ci)
         {
             char nextCommand[100];
@@ -344,44 +333,42 @@ int main(int argc, char* argv[])
 
             if (strcmp(nextCommandName, "irow") == 0)
             {
-                if (arg0 <= currRow && arg0 >= currRow - emptyBeforeThis)
+                if (arg0 >= realRow - emptyBeforeThis && arg0 <= realRow)
                 {
-                    ++currRow;
                     ++emptyBeforeThis;
+                    ++realRow;
                 }
             }
             else if (strcmp(nextCommandName, "drow") == 0)
             {
-                if (arg0 <= currRow && arg0 >= currRow - emptyBeforeThis)
+                if (arg0 >= realRow - emptyBeforeThis && arg0 < realRow) // deleting rows added with irow
                 {
-                    if (arg0 == currRow)
-                    {
-                        renderThis = 0;
-                        //--currRow;
-                    }
-                    else
-                    {
-                        for (int i = currRow - emptyBeforeThis; i < currRow; ++i)
-                        {
-                            if (i == arg0)
-                            {
-                                --emptyBeforeThis;
-                                //--currRow;
-                                break;
-                            }
-                        }
-                    }
+                    --emptyBeforeThis;
+                    --realRow;
+                }
+                else if (arg0 == realRow)
+                {
+                    renderThis = 0;
                 }
             }
-            else if (strcmp(nextCommandName, "arow") == 0)
+            else if (strcmp(nextCommandName, "drows") == 0)
             {
-                if (currRow == 1)
+                for (int i = arg0; i <= arg1; ++i)
                 {
-                    ++aRows;
+                    if (i >= realRow - emptyBeforeThis && i < realRow) // deleting rows added with irow
+                    {
+                        --emptyBeforeThis;
+                        --realRow;
+                    }
+                    else if (i == realRow)
+                    {
+                        renderThis = 0;
+                    }
                 }
             }
         }
 
+        // rendering
         for (int i = 1; i <= emptyBeforeThis; ++i)
         {
             for (int j = 0; j < renderColumns - 1; ++j)
@@ -399,8 +386,8 @@ int main(int argc, char* argv[])
             }
             printf("\n");
         }
-
-        ++currRow;
+        ++realRow;
+        ++currInputRow;
     } // todo check if final col is empty, control row length
 
     // render arows
