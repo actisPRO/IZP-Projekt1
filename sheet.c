@@ -53,6 +53,19 @@ int commandType (const char *name)
   return 0;
 }
 
+int isDelim (char symbol)
+{
+  for (int i = 0; i < strlen (delims); ++i)
+    {
+      if (symbol == delims[i])
+        {
+          return 1;
+        }
+    }
+
+  return 0;
+}
+
 int main (int argc, char *argv[])
 {
   if (argc == 1)
@@ -148,6 +161,7 @@ int main (int argc, char *argv[])
             {
               // add command to the sequence
               sprintf (commands[i_commands], "%s", argv[i]);
+              ++i_commands;
               mode = MODE_EDIT_TABLE;
             }
         }
@@ -171,8 +185,29 @@ int main (int argc, char *argv[])
     {
       int currColumn = 0;
       char columns[105][100] = {0};
+      int i_column = 0;
 
-      for (int i = 0; i < (int) strlen (delims); ++i)
+      for (int i = 0; i < strlen (input); ++i)
+        {
+          if (i == 0 && isDelim (input[i]))
+            {
+              ++currColumn;
+              continue;
+            }
+
+          if (!isDelim (input[i]) && input[i] != '\n' && input[i] != EOF)
+            {
+              columns[currColumn][i_column] = input[i];
+              ++i_column;
+            }
+          else
+            {
+              ++currColumn;
+              i_column = 0;
+            }
+        }
+
+      /*for (int i = 0; i < (int) strlen (delims); ++i)
         { // strtok will ignore the first column if it's empty, so we have to add it manually
           if (input[0] == delims[i])
             {
@@ -180,15 +215,16 @@ int main (int argc, char *argv[])
               ++currColumn;
               break;
             }
-        }
+        }*/
 
-      char *column = strtok (input, delims);
+      /*char *column = strtok (input, delims);
       while (column != NULL)
         {
           strcpy (columns[currColumn], column);
           column = strtok (NULL, delims);
           ++currColumn;
         }
+      int columnCount = currColumn;*/
       int columnCount = currColumn;
       if (currRow == 1)
         {
@@ -261,7 +297,11 @@ int main (int argc, char *argv[])
             }
           else if (strcmp (nextCommandName, "acol") == 0)
             {
-
+              if (currRow == 1)
+                {
+                  ++originalColumnCount;
+                  ++renderColumns;
+                }
             }
         }
 
@@ -270,7 +310,7 @@ int main (int argc, char *argv[])
           if (i == renderColumns - 1) printf ("%s", columns[i]);
           else printf ("%s%c", columns[i], delims[0]);
         }
-      //printf("\n");
+      printf("\n");
 
       ++currRow;
     } // todo check if final col is empty, control row length
