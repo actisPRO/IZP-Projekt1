@@ -55,7 +55,7 @@ int commandType (const char *name)
 
 int isDelim (char symbol)
 {
-  for (int i = 0; i < strlen (delims); ++i)
+  for (int i = 0; i < (int) strlen (delims); ++i)
     {
       if (symbol == delims[i])
         {
@@ -187,7 +187,7 @@ int main (int argc, char *argv[])
       char columns[105][100] = {0};
       int i_column = 0;
 
-      for (int i = 0; i < strlen (input); ++i)
+      for (int i = 0; i < (int) strlen (input); ++i)
         {
           if (i == 0 && isDelim (input[i]))
             {
