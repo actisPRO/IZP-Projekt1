@@ -103,6 +103,12 @@ int main(int argc, char* argv[])
         {
             if (strcmp(argv[i], tc_2arg[j]) == 0)
             {
+                if (mode == MODE_EDIT_DATA)
+                {
+                    printf("ERROR: please run commands for editing table separately from commands for editing data\n");
+                    return EXIT_FAILURE;
+                }
+
                 if (i + 1 >= argc || i + 2 >= argc)
                 {
                     printf("ERROR: incorrect amount of arguments for the command %s\n", argv[i]);
@@ -130,7 +136,6 @@ int main(int argc, char* argv[])
                     return EXIT_FAILURE;
                 }
 
-
                 // add command to the sequence
                 sprintf(commands[i_commands], "%s %s %s", argv[i], argv[i + 1], argv[i + 2]);
                 ++i_commands;
@@ -143,6 +148,12 @@ int main(int argc, char* argv[])
         {
             if (strcmp(argv[i], tc_1arg[j]) == 0)
             {
+                if (mode == MODE_EDIT_DATA)
+                {
+                    printf("ERROR: please run commands for editing table separately from commands for editing data\n");
+                    return EXIT_FAILURE;
+                }
+
                 if (i + 1 >= argc)
                 {
                     printf("ERROR: incorrect amount of arguments for the command '%s'\n", argv[i]);
@@ -170,6 +181,12 @@ int main(int argc, char* argv[])
         {
             if (strcmp(argv[i], tc_noargs[j]) == 0)
             {
+                if (mode == MODE_EDIT_DATA)
+                {
+                    printf("ERROR: please run commands for editing table separately from commands for editing data\n");
+                    return EXIT_FAILURE;
+                }
+
                 // add command to the sequence
                 sprintf(commands[i_commands], "%s", argv[i]);
                 ++i_commands;
@@ -178,6 +195,9 @@ int main(int argc, char* argv[])
                 if (strcmp(argv[i], "arow") == 0) ++aRows;
             }
         }
+
+        // selection args
+        
 
     } // todo: use while cycle, check args
 
@@ -388,7 +408,7 @@ int main(int argc, char* argv[])
         }
         ++realRow;
         ++currInputRow;
-    } // todo check if final col is empty, control row length
+    }
 
     // render arows
     for (int i = 1; i <= aRows; ++i)
