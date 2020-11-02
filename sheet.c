@@ -26,13 +26,41 @@ const char* tc_1arg[] = {
 };
 
 // array of table change commands with 2 args
-char* tc_2arg[] = {
+const char* tc_2arg[] = {
         "drows",
         "dcols"
 };
 
-// 0 - no args, 1 - 1 arg, 2 - 2 args
+// 0 - table edit command, 1 - selection command, 2 - content edit command, -1 - is not a command
 int commandType(const char* name)
+{
+    for (int i = 0; i < (int)(sizeof(tc_2arg) / sizeof(tc_2arg[0])); ++i)
+    {
+        if (strcmp(name, tc_2arg[i]) == 0)
+        {
+            return 0;
+        }
+    }
+    for (int i = 0; i < (int)(sizeof(tc_1arg) / sizeof(tc_1arg[0])); ++i)
+    {
+        if (strcmp(name, tc_1arg[i]) == 0)
+        {
+            return 0;
+        }
+    }
+    for (int i = 0; i < (int)(sizeof(tc_noargs) / sizeof(tc_noargs[0])); ++i)
+    {
+        if (strcmp(name, tc_noargs[i]) == 0)
+        {
+            return 0;
+        }
+    }
+
+    return -1;
+}
+
+// 0 - no args, 1 - 1 arg, 2 - 2 args, -1 - is not a command
+int argCount(const char* name)
 {
     for (int i = 0; i < (int)(sizeof(tc_2arg) / sizeof(tc_2arg[0])); ++i)
     {
@@ -50,7 +78,15 @@ int commandType(const char* name)
         }
     }
 
-    return 0;
+    for (int i = 0; i < (int)(sizeof(tc_noargs) / sizeof(tc_noargs[0])); ++i)
+    {
+        if (strcmp(name, tc_noargs[i]) == 0)
+        {
+            return 0;
+        }
+    }
+
+    return -1;
 }
 
 int isDelim(char symbol)
@@ -84,123 +120,112 @@ int main(int argc, char* argv[])
     int deletedRows[1024] = {0};
     int i_deletedRows = 0;
 
-    for (int i = 1; i < argc; ++i)
+    int arg = 1;
+    while (arg < argc)
     {
         // parse delimiters
-        if (strcmp(argv[i], "-d") == 0)
+        if (strcmp(argv[arg], "-d") == 0)
         {
-            if (i + 1 >= argc)
+            if (arg + 1 >= argc)
             { // index out of range (e.g. delimiter wasn't specified)
                 printf("ERROR: delimiter was not specified in -d argument!\n");
                 return EXIT_FAILURE;
             }
-            delims = argv[i + 1];
+            delims = argv[arg + 1];
+            arg += 2;
         }
-
-        // commands for editing table
-        // commands with 2 args
-        for (int j = 0; j < (int)(sizeof(tc_2arg) / sizeof(tc_2arg[0])); ++j)
+        else
         {
-            if (strcmp(argv[i], tc_2arg[j]) == 0)
+            int currArgC = argCount(argv[arg]);
+            if (currArgC == -1)
             {
-                if (mode == MODE_EDIT_DATA)
+                printf("ERROR: error in argument #%d: '%s' is not a command or a valid command argument", arg, argv[arg]);
+                return EXIT_FAILURE;
+            }
+            else
+            {
+                int currCommandT = commandType(argv[arg]);
+                if (currCommandT == 0)
                 {
-                    printf("ERROR: please run commands for editing table separately from commands for editing data\n");
-                    return EXIT_FAILURE;
-                }
+                    if (mode == MODE_EDIT_DATA)
+                    {
+                        printf("ERROR: please run commands for editing table separately from commands for editing data\n");
+                        return EXIT_FAILURE;
+                    }
 
-                if (i + 1 >= argc || i + 2 >= argc)
-                {
-                    printf("ERROR: incorrect amount of arguments for the command %s\n", argv[i]);
-                    return EXIT_FAILURE;
-                }
+                    mode = MODE_EDIT_TABLE;
 
-                // we control if arguments for the command are correct numbers
-                char* eptr;
-                long arg0 = strtol(argv[i + 1], &eptr, 10);
-                if (arg0 == 0)
-                {
-                    printf("ERROR: incorrect argument #1: %s for the command %s\n", argv[i + 1], argv[i]);
-                    return EXIT_FAILURE;
-                }
-                long arg1 = strtol(argv[i + 2], &eptr, 10);
-                if (arg1 == 0)
-                {
-                    printf("ERROR: incorrect argument #2: %s for the command %s\n", argv[i + 2], argv[i]);
-                    return EXIT_FAILURE;
-                }
+                    if (currArgC == 0)
+                    {
+                        sprintf(commands[i_commands], "%s", argv[arg]);
+                        ++i_commands;
+                        if (strcmp(argv[arg], "arow") == 0) ++aRows;
 
-                if (arg1 < arg0)
-                {
-                    printf("ERROR: argument #1 can't be bigger then argument #2\n");
-                    return EXIT_FAILURE;
-                }
+                        arg += 1;
+                    }
+                    else if (currArgC == 1)
+                    {
+                        if (arg + 1 >= argc)
+                        {
+                            printf("ERROR: incorrect amount of arguments for the command '%s'\n", argv[arg]);
+                            return EXIT_FAILURE;
+                        }
 
-                // add command to the sequence
-                sprintf(commands[i_commands], "%s %s %s", argv[i], argv[i + 1], argv[i + 2]);
-                ++i_commands;
-                mode = MODE_EDIT_TABLE;
+                        // we control if arguments for the command are correct numbers
+                        char* eptr;
+                        long arg0 = strtol(argv[arg + 1], &eptr, 10);
+                        if (arg0 == 0)
+                        {
+                            printf("ERROR: incorrect argument #1: %s for the command '%s'\n", argv[arg + 1], argv[arg]);
+                            return EXIT_FAILURE;
+                        }
+
+                        // add command to the sequence
+                        sprintf(commands[i_commands], "%s %s", argv[arg], argv[arg + 1]);
+                        ++i_commands;
+
+                        arg += 2;
+                    }
+                    else if (currArgC == 2)
+                    {
+                        if (arg + 2 >= argc)
+                        {
+                            printf("ERROR: incorrect amount of arguments for the command %s\n", argv[arg]);
+                            return EXIT_FAILURE;
+                        }
+
+                        // we control if arguments for the command are correct numbers
+                        char* eptr;
+                        long arg0 = strtol(argv[arg + 1], &eptr, 10);
+                        if (arg0 == 0)
+                        {
+                            printf("ERROR: incorrect argument #1: %s for the command %s\n", argv[arg + 1], argv[arg]);
+                            return EXIT_FAILURE;
+                        }
+                        long arg1 = strtol(argv[arg + 2], &eptr, 10);
+                        if (arg1 == 0)
+                        {
+                            printf("ERROR: incorrect argument #2: %s for the command %s\n", argv[arg + 2], argv[arg]);
+                            return EXIT_FAILURE;
+                        }
+
+                        if (arg1 < arg0)
+                        {
+                            printf("ERROR: argument #1 can't be bigger then argument #2\n");
+                            return EXIT_FAILURE;
+                        }
+
+                        // add command to the sequence
+                        sprintf(commands[i_commands], "%s %s %s", argv[arg], argv[arg + 1], argv[arg + 2]);
+                        ++i_commands;
+
+                        arg += 3;
+                    }
+                }
             }
         }
-
-        // commands with 1 arg
-        for (int j = 0; j < (int)(sizeof(tc_1arg) / sizeof(tc_1arg[0])); ++j)
-        {
-            if (strcmp(argv[i], tc_1arg[j]) == 0)
-            {
-                if (mode == MODE_EDIT_DATA)
-                {
-                    printf("ERROR: please run commands for editing table separately from commands for editing data\n");
-                    return EXIT_FAILURE;
-                }
-
-                if (i + 1 >= argc)
-                {
-                    printf("ERROR: incorrect amount of arguments for the command '%s'\n", argv[i]);
-                    return EXIT_FAILURE;
-                }
-
-                // we control if arguments for the command are correct numbers
-                char* eptr;
-                long arg0 = strtol(argv[i + 1], &eptr, 10);
-                if (arg0 == 0)
-                {
-                    printf("ERROR: incorrect argument #1: %s for the command '%s'\n", argv[i + 1], argv[i]);
-                    return EXIT_FAILURE;
-                }
-
-                // add command to the sequence
-                sprintf(commands[i_commands], "%s %s", argv[i], argv[i + 1]);
-                ++i_commands;
-                mode = MODE_EDIT_TABLE;
-            }
-        }
-
-        // commands without args
-        for (int j = 0; j < (int)(sizeof(tc_noargs) / sizeof(tc_noargs[0])); ++j)
-        {
-            if (strcmp(argv[i], tc_noargs[j]) == 0)
-            {
-                if (mode == MODE_EDIT_DATA)
-                {
-                    printf("ERROR: please run commands for editing table separately from commands for editing data\n");
-                    return EXIT_FAILURE;
-                }
-
-                // add command to the sequence
-                sprintf(commands[i_commands], "%s", argv[i]);
-                ++i_commands;
-                mode = MODE_EDIT_TABLE;
-
-                if (strcmp(argv[i], "arow") == 0) ++aRows;
-            }
-        }
-
-        // selection args
-        
-
-    } // todo: use while cycle, check args
-
+    }
+    
     if (mode == MODE_NONE)
     {
         printf("ERROR: no commands were specified\n");
@@ -267,11 +292,11 @@ int main(int argc, char* argv[])
             char* nextCommandName = strtok(nextCommand, " ");
             char* eptr;
             // get args count to prevent segmentation fault
-            if (commandType(nextCommandName) >= 1)
+            if (argCount(nextCommandName) >= 1)
             {
                 arg0 = strtol(strtok(NULL, " "), &eptr, 10);
             }
-            if (commandType(nextCommandName) >= 2)
+            if (argCount(nextCommandName) >= 2)
             {
                 arg1 = strtol(strtok(NULL, " "), &eptr, 10);
             }
@@ -342,11 +367,11 @@ int main(int argc, char* argv[])
             char* nextCommandName = strtok(nextCommand, " ");
             char* eptr;
             // get args count to prevent segmentation fault
-            if (commandType(nextCommandName) >= 1)
+            if (argCount(nextCommandName) >= 1)
             {
                 arg0 = strtol(strtok(NULL, " "), &eptr, 10);
             }
-            if (commandType(nextCommandName) >= 2)
+            if (argCount(nextCommandName) >= 2)
             {
                 arg1 = strtol(strtok(NULL, " "), &eptr, 10);
             }
