@@ -9,6 +9,12 @@
 #define MODE_EDIT_TABLE 0
 #define MODE_EDIT_DATA 1
 
+// selection modes
+#define SELECTION_TABLE 0
+#define SELECTION_ROWS 1
+#define SELECTION_BEGINSWITH 2
+#define SELECTION_CONTAINS 3
+
 char* delims = " ";
 
 // array of table change commands with no args
@@ -56,6 +62,11 @@ int commandType(const char* name)
         }
     }
 
+    if (strcmp(name, "rows") == 0 || strcmp(name, "beginswith") == 0 || strcmp(name, "contains") == 0)
+    {
+        return 1;
+    }
+
     return -1;
 }
 
@@ -86,6 +97,11 @@ int argCount(const char* name)
         }
     }
 
+    if (strcmp(name, "rows") == 0 || strcmp(name, "beginswith") == 0 || strcmp(name, "contains") == 0)
+    {
+        return 2;
+    }
+
     return -1;
 }
 
@@ -111,14 +127,22 @@ int main(int argc, char* argv[])
     }
 
     // parsing arguments
-    // modes are edit table and edit data.
     int mode = MODE_NONE;
+    // variables for MODE_EDIT_TABLE
     char commands[255][100] = { 0 }; // sequence of commands
     int i_commands = 0; // index in commands
 
     int aRows = 0; // amount of rows added with arow
     int deletedRows[1024] = {0};
     int i_deletedRows = 0;
+
+    // variables for MODE_EDIT_DATA
+    // selection variables
+    int selectionMode = SELECTION_TABLE;
+    int sRowsStart = 0;
+    int sRowsEnd = INT_MAX;
+    int columnIndex = 0;
+    char str[101] = { 0 };
 
     int arg = 1;
     while (arg < argc)
@@ -222,10 +246,50 @@ int main(int argc, char* argv[])
                         arg += 3;
                     }
                 }
+                else if (currCommandT == 1)
+                {
+                    if (mode == MODE_EDIT_TABLE)
+                    {
+                        printf("ERROR: please run commands for editing table separately from commands for editing data\n");
+                        return EXIT_FAILURE;
+                    }
+
+                    mode = MODE_EDIT_DATA;
+
+                    if (strcmp(argv[arg], "rows") == 0)
+                    {
+                        if (arg + 2 >= argc)
+                        {
+                            printf("ERROR: incorrect amount of arguments for the command %s\n", argv[arg]);
+                            return EXIT_FAILURE;
+                        }
+
+                        sRowsStart = atoi(argv[arg + 1]);
+                        if (sRowsStart == 0)
+                        {
+                            printf("ERROR: incorrect argument #1: %s for the command %s\n", argv[arg + 1], argv[arg]);
+                            return EXIT_FAILURE;
+                        }
+
+                        if (strcmp(argv[arg + 2], "-") != 0)
+                        {
+                            sRowsEnd = atoi(argv[arg + 2]);
+                            if (sRowsEnd == 0)
+                            {
+                                printf("ERROR: incorrect argument #2: %s for the command %s\n", argv[arg + 1], argv[arg]);
+                                return EXIT_FAILURE;
+                            }
+                        }
+
+                        selectionMode = SELECTION_ROWS;
+
+                        arg += 3;
+                    }
+                }
             }
         }
     }
-    
+
     if (mode == MODE_NONE)
     {
         printf("ERROR: no commands were specified\n");
