@@ -201,7 +201,7 @@ int main(int argc, char* argv[])
     char command[32] = { 0 };
     int editArg0 = 0;
     int editArg1 = 0;
-    int editSTR[101] = { 0 };
+    char editSTR[101] = { 0 };
 
     int arg = 1;
     while (arg < argc)
@@ -421,6 +421,61 @@ int main(int argc, char* argv[])
                         strcpy(command, argv[arg]);
 
                         arg += 2;
+                    }
+                    else
+                    {
+                        if (arg + 2 >= argc)
+                        {
+                            printf("ERROR: incorrect amount of arguments for the command %s\n", argv[arg]);
+                            return EXIT_FAILURE;
+                        }
+
+                        editArg0 = atoi(argv[arg + 1]);
+                        if (editArg0 < 1)
+                        {
+                            printf("ERROR: incorrect argument #1: %s for the command '%s'\n", argv[arg + 1], argv[arg]);
+                            return EXIT_FAILURE;
+                        }
+
+                        if (strcmp(argv[arg], "cset") == 0)
+                        {
+                            // reading STR
+                            int isCommand = commandType(argv[arg + 2]);
+                            if (isCommand != -1)
+                            {
+                                printf("ERROR: incorrect argument #2: unexpected command %s after the command %s\n", argv[arg + 2], argv[arg]);
+                                return EXIT_FAILURE;
+                            }
+                            int pos = 0;
+                            while (strlen(editSTR) < 100)
+                            {
+                                if ((strlen(editSTR) + strlen(argv[arg + 2 + pos]) > 100)) break;
+
+                                sprintf(editSTR, "%s%s", editSTR, argv[arg + 2 + pos]);
+                                ++pos;
+
+                                if (arg + 2 + pos >= argc) break;
+                                isCommand = commandType(argv[arg + 2 + pos]);
+                                if (isCommand != -1) break;
+
+                                sprintf(editSTR, "%s ", editSTR);
+                            }
+
+                            arg += 2 + pos;
+                        }
+                        else
+                        {
+                            editArg1 = atoi(argv[arg + 2]);
+                            if (editArg1 < 1)
+                            {
+                                printf("ERROR: incorrect argument #1: %s for the command '%s'\n", argv[arg + 2], argv[arg]);
+                                return EXIT_FAILURE;
+                            }
+
+                            arg += 2;
+                        }
+
+                        strcpy(command, argv[arg]);
                     }
                 }
             }
