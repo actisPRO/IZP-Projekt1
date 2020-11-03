@@ -189,6 +189,7 @@ int main(int argc, char* argv[])
     char selectionSTR[101] = { 0 };
     // editing variables
     char command[32] = { 0 };
+    int commandArgCount = 0;
     int editArg0 = 0;
     int editArg1 = 0;
     int editSTR[101] = { 0 };
@@ -392,6 +393,7 @@ int main(int argc, char* argv[])
                     }
 
                     mode = MODE_EDIT_DATA;
+                    commandArgCount = currArgC;
 
                     if (currArgC == 1)
                     {
@@ -436,7 +438,7 @@ int main(int argc, char* argv[])
     while (fgets(input, STR_MAX_LEN, stdin))
     {
         int currColumn = 0;
-        char columns[105][100] = { 0 };
+        char columns[105][101] = { 0 };
         int i_column = 0;
 
         for (int i = 0; i < (int)strlen(input); ++i)
@@ -605,6 +607,25 @@ int main(int argc, char* argv[])
                     }
                 }
             }
+        }
+        else
+        {
+            int onThisRow = 0;
+            if (selectionMode == SELECTION_ROWS)
+            {
+                if (currInputRow >= sRowsStart && currInputRow <= sRowsEnd) onThisRow = 1;
+            }
+            else if (selectionMode == SELECTION_CONTAINS)
+            {
+                if (strcmp(columns[colI - 1], selectionSTR) == 0) onThisRow = 1;
+            }
+            else if (selectionMode == SELECTION_BEGINSWITH)
+            {
+                if (strncmp(columns[colI - 1], selectionSTR, strlen(selectionSTR)) == 0) onThisRow = 1;
+            }
+            else onThisRow = 1;
+
+            
         }
 
         // rendering
