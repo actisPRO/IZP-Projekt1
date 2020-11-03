@@ -1,3 +1,12 @@
+/*
+ * Autor: Denis Karev (xkarev00)
+ * Výsoké učení technické v Brně
+ * Fakulta informačních technologií
+ *
+ * IZP - Základy programování
+ * Projekt č. 1
+ */
+
 #include <stdio.h>
 #include <string.h>
 #include <stdlib.h>
