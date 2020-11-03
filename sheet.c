@@ -460,7 +460,7 @@ int main(int argc, char* argv[])
 
                                 sprintf(editSTR, "%s ", editSTR);
                             }
-                            
+
                             strcpy(command, argv[arg]);
                             arg += 2 + pos;
                         }
@@ -474,7 +474,7 @@ int main(int argc, char* argv[])
                             }
 
                             strcpy(command, argv[arg]);
-                            arg += 2;
+                            arg += 3;
                         }
                     }
                 }
@@ -738,6 +738,10 @@ int main(int argc, char* argv[])
                 else if (strcmp(command, "cset") == 0)
                 {
                     strcpy(columns[editArg0 - 1], editSTR);
+                }
+                else if (strcmp(command, "copy") == 0)
+                {
+                    strcpy(columns[editArg1 - 1], columns[editArg0 - 1]);
                 }
             }
         }
