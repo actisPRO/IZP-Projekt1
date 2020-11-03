@@ -663,7 +663,7 @@ int main(int argc, char* argv[])
                             return EXIT_FAILURE;
                         }
                         int res = (int) round(number);
-                        itoa(res, columns[editArg0 - 1], 10);
+                        sprintf(columns[editArg0 - 1], "%d", res);
                     }
                 }
                 else if (strcmp(command, "int") == 0)
@@ -677,8 +677,8 @@ int main(int argc, char* argv[])
                             printf("ERROR: expected a number (row %d, column %d)\n", currInputRow, editArg0);
                             return EXIT_FAILURE;
                         }
-                        int res = (int) floor(number);
-                        itoa(res, columns[editArg0 - 1], 10);
+                        int res = (int) floor(number)
+                        sprintf(columns[editArg0 - 1], "%d", res);
                     }
                 }
             }
