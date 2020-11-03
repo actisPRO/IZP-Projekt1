@@ -187,8 +187,6 @@ int main(int argc, char* argv[])
     int i_commands = 0; // index in commands
 
     int aRows = 0; // amount of rows added with arow
-    int deletedRows[1024] = {0};
-    int i_deletedRows = 0;
 
     // variables for MODE_EDIT_DATA
     // selection variables
