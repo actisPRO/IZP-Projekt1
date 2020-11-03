@@ -141,7 +141,7 @@ int main(int argc, char* argv[])
     int selectionMode = SELECTION_TABLE;
     int sRowsStart = 0;
     int sRowsEnd = INT_MAX;
-    int columnIndex = 0;
+    int colI = 0;
     char str[101] = { 0 };
 
     int arg = 1;
@@ -285,6 +285,58 @@ int main(int argc, char* argv[])
 
                         arg += 3;
                     }
+                    else
+                    {
+                        if (strcmp(argv[arg], "beginswith") == 0)
+                        {
+                            selectionMode = SELECTION_BEGINSWITH;
+                        }
+                        else if (strcmp(argv[arg], "contains") == 0)
+                        {
+                            selectionMode = SELECTION_CONTAINS;
+                        }
+
+                        if (arg + 2 >= argc)
+                        {
+                            printf("ERROR: incorrect amount of arguments for the command %s\n", argv[arg]);
+                            return EXIT_FAILURE;
+                        }
+
+                        colI = atoi(argv[arg + 1]);
+                        if (colI == 0)
+                        {
+                            printf("ERROR: incorrect argument #1: %s for the command %s\n", argv[arg + 1], argv[arg]);
+                            return EXIT_FAILURE;
+                        }
+
+                        // reading STR
+                        int isCommand = commandType(argv[arg + 2]);
+                        if (isCommand != -1)
+                        {
+                            printf("ERROR: incorrect argument #2: unexpected command %s after the command %s\n", argv[arg + 2], argv[arg]);
+                            return EXIT_FAILURE;
+                        }
+                        int pos = 0;
+                        while (strlen(str) < 100)
+                        {
+                            if ((strlen(str) + strlen(argv[arg + 2 + pos]) > 100)) break;
+
+                            sprintf(str, "%s%s", str, argv[arg + 2 + pos]);
+                            ++pos;
+
+                            if (arg + 2 + pos >= argc) break;
+                            isCommand = commandType(argv[arg + 2 + pos]);
+                            if (isCommand != -1) break;
+
+                            sprintf(str, "%s ", str);
+                        }
+
+                        arg += 2 + pos;
+                    }
+                }
+                else if (currCommandT == 2)
+                {
+                    
                 }
             }
         }
