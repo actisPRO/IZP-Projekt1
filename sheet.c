@@ -12,7 +12,6 @@
 #include <stdlib.h>
 #include <limits.h>
 #include <ctype.h>
-#include <math.h>
 
 #define STR_MAX_LEN 81920 / CHAR_BIT
 
@@ -662,7 +661,7 @@ int main(int argc, char* argv[])
                             printf("ERROR: expected a number (row %d, column %d)\n", currInputRow, editArg0);
                             return EXIT_FAILURE;
                         }
-                        int res = (int) round(number);
+                        int res = number >= 0 ? (int) (number + 0.5) : (int) (number - 0.5);
                         sprintf(columns[editArg0 - 1], "%d", res);
                     }
                 }
@@ -677,7 +676,7 @@ int main(int argc, char* argv[])
                             printf("ERROR: expected a number (row %d, column %d)\n", currInputRow, editArg0);
                             return EXIT_FAILURE;
                         }
-                        int res = (int) floor(number);
+                        int res = (int) number;
                         sprintf(columns[editArg0 - 1], "%d", res);
                     }
                 }
