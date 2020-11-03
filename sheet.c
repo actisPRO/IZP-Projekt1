@@ -743,6 +743,16 @@ int main(int argc, char* argv[])
                 {
                     strcpy(columns[editArg1 - 1], columns[editArg0 - 1]);
                 }
+                else if (strcmp(command, "swap") == 0)
+                {
+                    if (editArg0 < originalCols && editArg1 <= originalCols)
+                    {
+                        char buff[101] = {0};
+                        strcpy(buff, columns[editArg0 - 1]);
+                        strcpy(columns[editArg0 - 1], columns[editArg1 - 1]);
+                        strcpy(columns[editArg1 - 1], buff);
+                    }
+                }
             }
         }
 
