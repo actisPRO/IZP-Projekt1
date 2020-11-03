@@ -37,6 +37,22 @@ const char* tc_2arg[] = {
         "dcols"
 };
 
+// array of data edit commands with 1 arg
+const char* de_1arg[] = {
+        "tolower",
+        "toupper",
+        "round",
+        "int"
+};
+
+// array of data edit commands with 2 args
+const char* de_2arg[] = {
+        "cset",
+        "copy",
+        "swap",
+        "move"
+};
+
 // 0 - table edit command, 1 - selection command, 2 - content edit command, -1 - is not a command
 int commandType(const char* name)
 {
@@ -62,6 +78,21 @@ int commandType(const char* name)
         }
     }
 
+    for (int i = 0; i < (int)(sizeof(de_1arg) / sizeof(de_1arg[0])); ++i)
+    {
+        if (strcmp(name, de_1arg[i]) == 0)
+        {
+            return 2;
+        }
+    }
+    for (int i = 0; i < (int)(sizeof(de_2arg) / sizeof(de_2arg[0])); ++i)
+    {
+        if (strcmp(name, de_2arg[i]) == 0)
+        {
+            return 2;
+        }
+    }
+
     if (strcmp(name, "rows") == 0 || strcmp(name, "beginswith") == 0 || strcmp(name, "contains") == 0)
     {
         return 1;
@@ -80,7 +111,6 @@ int argCount(const char* name)
             return 2;
         }
     }
-
     for (int i = 0; i < (int)(sizeof(tc_1arg) / sizeof(tc_1arg[0])); ++i)
     {
         if (strcmp(name, tc_1arg[i]) == 0)
@@ -88,12 +118,26 @@ int argCount(const char* name)
             return 1;
         }
     }
-
     for (int i = 0; i < (int)(sizeof(tc_noargs) / sizeof(tc_noargs[0])); ++i)
     {
         if (strcmp(name, tc_noargs[i]) == 0)
         {
             return 0;
+        }
+    }
+
+    for (int i = 0; i < (int)(sizeof(de_1arg) / sizeof(de_1arg[0])); ++i)
+    {
+        if (strcmp(name, de_1arg[i]) == 0)
+        {
+            return 1;
+        }
+    }
+    for (int i = 0; i < (int)(sizeof(de_2arg) / sizeof(de_2arg[0])); ++i)
+    {
+        if (strcmp(name, de_2arg[i]) == 0)
+        {
+            return 2;
         }
     }
 
@@ -336,7 +380,13 @@ int main(int argc, char* argv[])
                 }
                 else if (currCommandT == 2)
                 {
-                    
+                    if (mode == MODE_EDIT_TABLE)
+                    {
+                        printf("ERROR: please run commands for editing table separately from commands for editing data\n");
+                        return EXIT_FAILURE;
+                    }
+
+                    mode = MODE_EDIT_DATA;
                 }
             }
         }
