@@ -657,6 +657,21 @@ int main(int argc, char* argv[])
                         itoa(res, columns[editArg0 - 1], 10);
                     }
                 }
+                else if (strcmp(command, "int") == 0)
+                {
+                    if (editArg0 <= columnCount)
+                    {
+                        char *err;
+                        double number = strtod(columns[editArg0 - 1], &err);
+                        if (*err != 0 && !isspace((unsigned char) *err))
+                        {
+                            printf("ERROR: expected a number (row %d, column %d)\n", currInputRow, editArg0);
+                            return EXIT_FAILURE;
+                        }
+                        int res = (int) floor(number);
+                        itoa(res, columns[editArg0 - 1], 10);
+                    }
+                }
             }
         }
 
