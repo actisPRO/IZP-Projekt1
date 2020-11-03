@@ -220,7 +220,8 @@ int main(int argc, char* argv[])
             int currArgC = argCount(argv[arg]);
             if (currArgC == -1) // a little bit weird check
             {
-                printf("ERROR: error in argument #%d: '%s' is not a command or a valid command argument", arg, argv[arg]);
+                printf("ERROR: error in argument #%d: '%s' is not a command or a valid command argument", arg,
+                        argv[arg]);
                 return EXIT_FAILURE;
             }
             else
@@ -333,7 +334,8 @@ int main(int argc, char* argv[])
                             sRowsEnd = atoi(argv[arg + 2]);
                             if (sRowsEnd == 0)
                             {
-                                printf("ERROR: incorrect argument #2: %s for the command %s\n", argv[arg + 1], argv[arg]);
+                                printf("ERROR: incorrect argument #2: %s for the command %s\n", argv[arg + 1],
+                                        argv[arg]);
                                 return EXIT_FAILURE;
                             }
                         }
@@ -370,7 +372,8 @@ int main(int argc, char* argv[])
                         int isCommand = commandType(argv[arg + 2]);
                         if (isCommand != -1)
                         {
-                            printf("ERROR: incorrect argument #2: unexpected command %s after the command %s\n", argv[arg + 2], argv[arg]);
+                            printf("ERROR: incorrect argument #2: unexpected command %s after the command %s\n",
+                                    argv[arg + 2], argv[arg]);
                             return EXIT_FAILURE;
                         }
                         int pos = 0;
@@ -441,7 +444,8 @@ int main(int argc, char* argv[])
                             int isCommand = commandType(argv[arg + 2]);
                             if (isCommand != -1)
                             {
-                                printf("ERROR: incorrect argument #2: unexpected command %s after the command %s\n", argv[arg + 2], argv[arg]);
+                                printf("ERROR: incorrect argument #2: unexpected command %s after the command %s\n",
+                                        argv[arg + 2], argv[arg]);
                                 return EXIT_FAILURE;
                             }
                             int pos = 0;
@@ -467,7 +471,8 @@ int main(int argc, char* argv[])
                             editArg1 = atoi(argv[arg + 2]);
                             if (editArg1 < 1)
                             {
-                                printf("ERROR: incorrect argument #1: %s for the command '%s'\n", argv[arg + 2], argv[arg]);
+                                printf("ERROR: incorrect argument #1: %s for the command '%s'\n", argv[arg + 2],
+                                        argv[arg]);
                                 return EXIT_FAILURE;
                             }
 
@@ -707,14 +712,14 @@ int main(int argc, char* argv[])
                 {
                     if (editArg0 <= columnCount)
                     {
-                        char *err;
+                        char* err;
                         double number = strtod(columns[editArg0 - 1], &err);
-                        if (*err != 0 && !isspace((unsigned char) *err))
+                        if (*err != 0 && !isspace((unsigned char)*err))
                         {
                             printf("ERROR: expected a number (row %d, column %d)\n", currInputRow, editArg0);
                             return EXIT_FAILURE;
                         }
-                        int res = number >= 0 ? (int) (number + 0.5) : (int) (number - 0.5);
+                        int res = number >= 0 ? (int)(number + 0.5) : (int)(number - 0.5);
                         sprintf(columns[editArg0 - 1], "%d", res);
                     }
                 }
@@ -722,14 +727,14 @@ int main(int argc, char* argv[])
                 {
                     if (editArg0 <= columnCount)
                     {
-                        char *err;
+                        char* err;
                         double number = strtod(columns[editArg0 - 1], &err);
-                        if (*err != 0 && !isspace((unsigned char) *err))
+                        if (*err != 0 && !isspace((unsigned char)*err))
                         {
                             printf("ERROR: expected a number (row %d, column %d)\n", currInputRow, editArg0);
                             return EXIT_FAILURE;
                         }
-                        int res = (int) number;
+                        int res = (int)number;
                         sprintf(columns[editArg0 - 1], "%d", res);
                     }
                 }
@@ -745,7 +750,7 @@ int main(int argc, char* argv[])
                 {
                     if (editArg0 < originalCols && editArg1 <= originalCols)
                     {
-                        char buff[101] = {0};
+                        char buff[101] = { 0 };
                         strcpy(buff, columns[editArg0 - 1]);
                         strcpy(columns[editArg0 - 1], columns[editArg1 - 1]);
                         strcpy(columns[editArg1 - 1], buff);
@@ -755,7 +760,7 @@ int main(int argc, char* argv[])
                 {
                     if (editArg0 < originalCols && editArg1 <= originalCols)
                     {
-                        char buff[101] = {0};
+                        char buff[101] = { 0 };
                         strcpy(buff, columns[editArg0 - 1]);
                         for (int col = editArg0 - 1; col < editArg1 - 2; ++col)
                         {
