@@ -460,7 +460,8 @@ int main(int argc, char* argv[])
 
                                 sprintf(editSTR, "%s ", editSTR);
                             }
-
+                            
+                            strcpy(command, argv[arg]);
                             arg += 2 + pos;
                         }
                         else
@@ -472,10 +473,9 @@ int main(int argc, char* argv[])
                                 return EXIT_FAILURE;
                             }
 
+                            strcpy(command, argv[arg]);
                             arg += 2;
                         }
-
-                        strcpy(command, argv[arg]);
                     }
                 }
             }
@@ -734,6 +734,10 @@ int main(int argc, char* argv[])
                         int res = (int) number;
                         sprintf(columns[editArg0 - 1], "%d", res);
                     }
+                }
+                else if (strcmp(command, "cset") == 0)
+                {
+                    strcpy(columns[editArg0 - 1], editSTR);
                 }
             }
         }
