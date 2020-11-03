@@ -1,4 +1,4 @@
-![VUT FIT logo](https://i.imgur.com/C93KslY.png)
+![VUT FIT logo](https://wis.fit.vutbr.cz/images/fitnewb.png)
 
 # Projekt č. 1 - Práce s textem
 **Předmět:** IZP - Základy programování
