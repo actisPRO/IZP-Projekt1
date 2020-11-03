@@ -185,7 +185,6 @@ int main(int argc, char* argv[])
     // variables for MODE_EDIT_TABLE
     char commands[255][100] = { 0 }; // sequence of commands
     int i_commands = 0; // index in commands
-
     int aRows = 0; // amount of rows added with arow
 
     // variables for MODE_EDIT_DATA
