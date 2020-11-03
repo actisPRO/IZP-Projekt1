@@ -2,6 +2,7 @@
 #include <string.h>
 #include <stdlib.h>
 #include <limits.h>
+#include <ctype.h>
 
 #define STR_MAX_LEN 81920 / CHAR_BIT
 
@@ -189,7 +190,6 @@ int main(int argc, char* argv[])
     char selectionSTR[101] = { 0 };
     // editing variables
     char command[32] = { 0 };
-    int commandArgCount = 0;
     int editArg0 = 0;
     int editArg1 = 0;
     int editSTR[101] = { 0 };
@@ -393,7 +393,6 @@ int main(int argc, char* argv[])
                     }
 
                     mode = MODE_EDIT_DATA;
-                    commandArgCount = currArgC;
 
                     if (currArgC == 1)
                     {
@@ -625,7 +624,24 @@ int main(int argc, char* argv[])
             }
             else onThisRow = 1;
 
-            
+            // run commands
+            if (onThisRow == 1)
+            {
+                if (strcmp(command, "tolower") == 0)
+                {
+                    for (int i = 0; columns[editArg0 - 1][i]; ++i)
+                    {
+                        columns[editArg0 - 1][i] = tolower(columns[editArg0 - 1][i]);
+                    }
+                }
+                else if (strcmp(command, "toupper") == 0)
+                {
+                    for (int i = 0; columns[editArg0 - 1][i]; ++i)
+                    {
+                        columns[editArg0 - 1][i] = toupper(columns[editArg0 - 1][i]);
+                    }
+                }
+            }
         }
 
         // rendering
