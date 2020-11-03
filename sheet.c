@@ -186,7 +186,12 @@ int main(int argc, char* argv[])
     int sRowsStart = 0;
     int sRowsEnd = INT_MAX;
     int colI = 0;
-    char str[101] = { 0 };
+    char selectionSTR[101] = { 0 };
+    // editing variables
+    char command[32] = { 0 };
+    int editArg0 = 0;
+    int editArg1 = 0;
+    int editSTR[101] = { 0 };
 
     int arg = 1;
     while (arg < argc)
@@ -205,7 +210,7 @@ int main(int argc, char* argv[])
         else
         {
             int currArgC = argCount(argv[arg]);
-            if (currArgC == -1)
+            if (currArgC == -1) // a little bit weird check
             {
                 printf("ERROR: error in argument #%d: '%s' is not a command or a valid command argument", arg, argv[arg]);
                 return EXIT_FAILURE;
@@ -242,7 +247,7 @@ int main(int argc, char* argv[])
                         // we control if arguments for the command are correct numbers
                         char* eptr;
                         long arg0 = strtol(argv[arg + 1], &eptr, 10);
-                        if (arg0 == 0)
+                        if (arg0 < 1)
                         {
                             printf("ERROR: incorrect argument #1: %s for the command '%s'\n", argv[arg + 1], argv[arg]);
                             return EXIT_FAILURE;
@@ -265,13 +270,13 @@ int main(int argc, char* argv[])
                         // we control if arguments for the command are correct numbers
                         char* eptr;
                         long arg0 = strtol(argv[arg + 1], &eptr, 10);
-                        if (arg0 == 0)
+                        if (arg0 < 1)
                         {
                             printf("ERROR: incorrect argument #1: %s for the command %s\n", argv[arg + 1], argv[arg]);
                             return EXIT_FAILURE;
                         }
                         long arg1 = strtol(argv[arg + 2], &eptr, 10);
-                        if (arg1 == 0)
+                        if (arg1 < 1)
                         {
                             printf("ERROR: incorrect argument #2: %s for the command %s\n", argv[arg + 2], argv[arg]);
                             return EXIT_FAILURE;
@@ -361,18 +366,18 @@ int main(int argc, char* argv[])
                             return EXIT_FAILURE;
                         }
                         int pos = 0;
-                        while (strlen(str) < 100)
+                        while (strlen(selectionSTR) < 100)
                         {
-                            if ((strlen(str) + strlen(argv[arg + 2 + pos]) > 100)) break;
+                            if ((strlen(selectionSTR) + strlen(argv[arg + 2 + pos]) > 100)) break;
 
-                            sprintf(str, "%s%s", str, argv[arg + 2 + pos]);
+                            sprintf(selectionSTR, "%s%s", selectionSTR, argv[arg + 2 + pos]);
                             ++pos;
 
                             if (arg + 2 + pos >= argc) break;
                             isCommand = commandType(argv[arg + 2 + pos]);
                             if (isCommand != -1) break;
 
-                            sprintf(str, "%s ", str);
+                            sprintf(selectionSTR, "%s ", selectionSTR);
                         }
 
                         arg += 2 + pos;
@@ -387,6 +392,26 @@ int main(int argc, char* argv[])
                     }
 
                     mode = MODE_EDIT_DATA;
+
+                    if (currArgC == 1)
+                    {
+                        if (arg + 1 >= argc)
+                        {
+                            printf("ERROR: incorrect amount of arguments for the command '%s'\n", argv[arg]);
+                            return EXIT_FAILURE;
+                        }
+
+                        editArg0 = atoi(argv[arg + 1]);
+                        if (editArg0 < 1)
+                        {
+                            printf("ERROR: incorrect argument #1: %s for the command '%s'\n", argv[arg + 1], argv[arg]);
+                            return EXIT_FAILURE;
+                        }
+
+                        strcpy(command, argv[arg]);
+
+                        arg += 2;
+                    }
                 }
             }
         }
@@ -448,132 +473,135 @@ int main(int argc, char* argv[])
             colsWithAcol = columnCount;
         }
 
-        // now run column commands
-        for (int ci = 0; ci < i_commands; ++ci)
-        {
-            char nextCommand[100];
-            strcpy(nextCommand, commands[ci]);
-
-            int arg0, arg1;
-            char* nextCommandName = strtok(nextCommand, " ");
-            char* eptr;
-            // get args count to prevent segmentation fault
-            if (argCount(nextCommandName) >= 1)
-            {
-                arg0 = strtol(strtok(NULL, " "), &eptr, 10);
-            }
-            if (argCount(nextCommandName) >= 2)
-            {
-                arg1 = strtol(strtok(NULL, " "), &eptr, 10);
-            }
-
-            // run command
-            if (strcmp(nextCommandName, "icol") == 0)
-            {
-                if (arg0 <= renderColumns)
-                { // argument > amount of columns => ignore;
-                    if (currInputRow == 1) ++renderColumns;
-                    // copy content from each column to the next one. arg0 - 1 because array of columns starts with 0, but table's indexes start with 1
-                    for (int i = renderColumns; i > arg0 - 1; --i)
-                    {
-                        strcpy(columns[i], columns[i - 1]);
-                    }
-
-                    strcpy(columns[arg0 - 1], ""); // new empty column
-                }
-            }
-            else if (strcmp(nextCommandName, "dcol") == 0)
-            {
-                if (arg0 <= colsWithAcol)
-                {
-                    // copy content
-                    for (int i = arg0 - 1; i <= colsWithAcol; ++i)
-                    {
-                        strcpy(columns[i], columns[i + 1]);
-                    }
-
-                    // decrease table length
-                    if (currInputRow == 1) --renderColumns;
-                }
-            }
-            else if (strcmp(nextCommandName, "dcols") == 0)
-            {
-                if (arg0 <= colsWithAcol)
-                {
-                    if (arg1 > colsWithAcol) arg1 = colsWithAcol;
-                    int removedCols = arg1 - arg0 + 1;
-
-                    for (int i = arg0 - 1; i <= columnCount; ++i)
-                    {
-                        strcpy(columns[i], columns[i + removedCols]);
-                    }
-
-                    if (currInputRow == 1) renderColumns -= removedCols;
-                }
-            }
-            else if (strcmp(nextCommandName, "acol") == 0)
-            {
-                if (currInputRow == 1)
-                {
-                    ++colsWithAcol;
-                    ++renderColumns;
-                }
-            }
-        }
-
-        // row commands
         int renderThis = 1;
         int emptyBeforeThis = 0;
-        for (int ci = 0; ci < i_commands; ++ci)
+        if (mode == MODE_EDIT_TABLE)
         {
-            char nextCommand[100];
-            strcpy(nextCommand, commands[ci]);
+            // column commands
+            for (int ci = 0; ci < i_commands; ++ci)
+            {
+                char nextCommand[100];
+                strcpy(nextCommand, commands[ci]);
 
-            int arg0, arg1;
-            char* nextCommandName = strtok(nextCommand, " ");
-            char* eptr;
-            // get args count to prevent segmentation fault
-            if (argCount(nextCommandName) >= 1)
-            {
-                arg0 = strtol(strtok(NULL, " "), &eptr, 10);
-            }
-            if (argCount(nextCommandName) >= 2)
-            {
-                arg1 = strtol(strtok(NULL, " "), &eptr, 10);
+                int arg0, arg1;
+                char* nextCommandName = strtok(nextCommand, " ");
+                char* eptr;
+                // get args count to prevent segmentation fault
+                if (argCount(nextCommandName) >= 1)
+                {
+                    arg0 = strtol(strtok(NULL, " "), &eptr, 10);
+                }
+                if (argCount(nextCommandName) >= 2)
+                {
+                    arg1 = strtol(strtok(NULL, " "), &eptr, 10);
+                }
+
+                // run command
+                if (strcmp(nextCommandName, "icol") == 0)
+                {
+                    if (arg0 <= renderColumns)
+                    { // argument > amount of columns => ignore;
+                        if (currInputRow == 1) ++renderColumns;
+                        // copy content from each column to the next one. arg0 - 1 because array of columns starts with 0, but table's indexes start with 1
+                        for (int i = renderColumns; i > arg0 - 1; --i)
+                        {
+                            strcpy(columns[i], columns[i - 1]);
+                        }
+
+                        strcpy(columns[arg0 - 1], ""); // new empty column
+                    }
+                }
+                else if (strcmp(nextCommandName, "dcol") == 0)
+                {
+                    if (arg0 <= colsWithAcol)
+                    {
+                        // copy content
+                        for (int i = arg0 - 1; i <= colsWithAcol; ++i)
+                        {
+                            strcpy(columns[i], columns[i + 1]);
+                        }
+
+                        // decrease table length
+                        if (currInputRow == 1) --renderColumns;
+                    }
+                }
+                else if (strcmp(nextCommandName, "dcols") == 0)
+                {
+                    if (arg0 <= colsWithAcol)
+                    {
+                        if (arg1 > colsWithAcol) arg1 = colsWithAcol;
+                        int removedCols = arg1 - arg0 + 1;
+
+                        for (int i = arg0 - 1; i <= columnCount; ++i)
+                        {
+                            strcpy(columns[i], columns[i + removedCols]);
+                        }
+
+                        if (currInputRow == 1) renderColumns -= removedCols;
+                    }
+                }
+                else if (strcmp(nextCommandName, "acol") == 0)
+                {
+                    if (currInputRow == 1)
+                    {
+                        ++colsWithAcol;
+                        ++renderColumns;
+                    }
+                }
             }
 
-            if (strcmp(nextCommandName, "irow") == 0)
+            // row commands
+            for (int ci = 0; ci < i_commands; ++ci)
             {
-                if (arg0 >= realRow - emptyBeforeThis && arg0 <= realRow)
+                char nextCommand[100];
+                strcpy(nextCommand, commands[ci]);
+
+                int arg0, arg1;
+                char* nextCommandName = strtok(nextCommand, " ");
+                char* eptr;
+                // get args count to prevent segmentation fault
+                if (argCount(nextCommandName) >= 1)
                 {
-                    ++emptyBeforeThis;
-                    ++realRow;
+                    arg0 = strtol(strtok(NULL, " "), &eptr, 10);
                 }
-            }
-            else if (strcmp(nextCommandName, "drow") == 0)
-            {
-                if (arg0 >= realRow - emptyBeforeThis && arg0 < realRow) // deleting rows added with irow
+                if (argCount(nextCommandName) >= 2)
                 {
-                    --emptyBeforeThis;
-                    --realRow;
+                    arg1 = strtol(strtok(NULL, " "), &eptr, 10);
                 }
-                else if (arg0 == realRow)
+
+                if (strcmp(nextCommandName, "irow") == 0)
                 {
-                    renderThis = 0;
+                    if (arg0 >= realRow - emptyBeforeThis && arg0 <= realRow)
+                    {
+                        ++emptyBeforeThis;
+                        ++realRow;
+                    }
                 }
-            }
-            else if (strcmp(nextCommandName, "drows") == 0)
-            {
-                for (int i = arg0; i <= arg1; ++i)
+                else if (strcmp(nextCommandName, "drow") == 0)
                 {
-                    if (i >= realRow - emptyBeforeThis && i < realRow) // deleting rows added with irow
+                    if (arg0 >= realRow - emptyBeforeThis && arg0 < realRow) // deleting rows added with irow
                     {
                         --emptyBeforeThis;
                         --realRow;
                     }
-                    else if (i == realRow)
+                    else if (arg0 == realRow)
                     {
                         renderThis = 0;
+                    }
+                }
+                else if (strcmp(nextCommandName, "drows") == 0)
+                {
+                    for (int i = arg0; i <= arg1; ++i)
+                    {
+                        if (i >= realRow - emptyBeforeThis && i < realRow) // deleting rows added with irow
+                        {
+                            --emptyBeforeThis;
+                            --realRow;
+                        }
+                        else if (i == realRow)
+                        {
+                            renderThis = 0;
+                        }
                     }
                 }
             }
@@ -604,8 +632,7 @@ int main(int argc, char* argv[])
     // render arows
     for (int i = 1; i <= aRows; ++i)
     {
-        // check if it isn't deleted
-        for (int j = 0; j < renderColumns; ++j)
+        for (int j = 1; j < renderColumns; ++j)
         {
             printf("%c", delims[0]);
         }
