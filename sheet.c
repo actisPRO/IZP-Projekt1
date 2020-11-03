@@ -753,6 +753,19 @@ int main(int argc, char* argv[])
                         strcpy(columns[editArg1 - 1], buff);
                     }
                 }
+                else if (strcmp(command, "move") == 0)
+                {
+                    if (editArg0 < originalCols && editArg1 <= originalCols)
+                    {
+                        char buff[101] = {0};
+                        strcpy(buff, columns[editArg0 - 1]);
+                        for (int col = editArg0 - 1; col < editArg1 - 2; ++col)
+                        {
+                            strcpy(columns[col], columns[col + 1]);
+                        }
+                        strcpy(columns[editArg1 - 2], buff);
+                    }
+                }
             }
         }
 
