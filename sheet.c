@@ -176,7 +176,7 @@ int main(int argc, char* argv[])
 {
     if (argc == 1)
     {
-        printf("ERROR: no arguments were specified");
+        fprintf(stderr, "ERROR: no arguments were specified");
         return EXIT_FAILURE;
     }
 
@@ -208,7 +208,7 @@ int main(int argc, char* argv[])
         {
             if (arg + 1 >= argc)
             { // index out of range (e.g. delimiter wasn't specified)
-                printf("ERROR: delimiter was not specified in -d argument!\n");
+                fprintf(stderr, "ERROR: delimiter was not specified in -d argument!\n");
                 return EXIT_FAILURE;
             }
             delims = argv[arg + 1];
@@ -219,7 +219,7 @@ int main(int argc, char* argv[])
             int currArgC = argCount(argv[arg]);
             if (currArgC == -1) // a little bit weird check
             {
-                printf("ERROR: error in argument #%d: '%s' is not a command or a valid command argument", arg,
+                fprintf(stderr, "ERROR: error in argument #%d: '%s' is not a command or a valid command argument", arg,
                         argv[arg]);
                 return EXIT_FAILURE;
             }
@@ -230,7 +230,7 @@ int main(int argc, char* argv[])
                 {
                     if (mode == MODE_EDIT_DATA)
                     {
-                        printf("ERROR: please run commands for editing table separately from commands for editing data\n");
+                        fprintf(stderr, "ERROR: please run commands for editing table separately from commands for editing data\n");
                         return EXIT_FAILURE;
                     }
 
@@ -248,7 +248,7 @@ int main(int argc, char* argv[])
                     {
                         if (arg + 1 >= argc)
                         {
-                            printf("ERROR: incorrect amount of arguments for the command '%s'\n", argv[arg]);
+                            fprintf(stderr, "ERROR: incorrect amount of arguments for the command '%s'\n", argv[arg]);
                             return EXIT_FAILURE;
                         }
 
@@ -257,7 +257,7 @@ int main(int argc, char* argv[])
                         long arg0 = strtol(argv[arg + 1], &eptr, 10);
                         if (arg0 < 1)
                         {
-                            printf("ERROR: incorrect argument #1: %s for the command '%s'\n", argv[arg + 1], argv[arg]);
+                            fprintf(stderr, "ERROR: incorrect argument #1: %s for the command '%s'\n", argv[arg + 1], argv[arg]);
                             return EXIT_FAILURE;
                         }
 
@@ -271,7 +271,7 @@ int main(int argc, char* argv[])
                     {
                         if (arg + 2 >= argc)
                         {
-                            printf("ERROR: incorrect amount of arguments for the command %s\n", argv[arg]);
+                            fprintf(stderr, "ERROR: incorrect amount of arguments for the command %s\n", argv[arg]);
                             return EXIT_FAILURE;
                         }
 
@@ -280,19 +280,19 @@ int main(int argc, char* argv[])
                         long arg0 = strtol(argv[arg + 1], &eptr, 10);
                         if (arg0 < 1)
                         {
-                            printf("ERROR: incorrect argument #1: %s for the command %s\n", argv[arg + 1], argv[arg]);
+                            fprintf(stderr, "ERROR: incorrect argument #1: %s for the command %s\n", argv[arg + 1], argv[arg]);
                             return EXIT_FAILURE;
                         }
                         long arg1 = strtol(argv[arg + 2], &eptr, 10);
                         if (arg1 < 1)
                         {
-                            printf("ERROR: incorrect argument #2: %s for the command %s\n", argv[arg + 2], argv[arg]);
+                            fprintf(stderr, "ERROR: incorrect argument #2: %s for the command %s\n", argv[arg + 2], argv[arg]);
                             return EXIT_FAILURE;
                         }
 
                         if (arg1 < arg0)
                         {
-                            printf("ERROR: argument #1 can't be bigger then argument #2\n");
+                            fprintf(stderr, "ERROR: argument #1 can't be bigger then argument #2\n");
                             return EXIT_FAILURE;
                         }
 
@@ -307,7 +307,7 @@ int main(int argc, char* argv[])
                 {
                     if (mode == MODE_EDIT_TABLE)
                     {
-                        printf("ERROR: please run commands for editing table separately from commands for editing data\n");
+                        fprintf(stderr, "ERROR: please run commands for editing table separately from commands for editing data\n");
                         return EXIT_FAILURE;
                     }
 
@@ -317,14 +317,14 @@ int main(int argc, char* argv[])
                     {
                         if (arg + 2 >= argc)
                         {
-                            printf("ERROR: incorrect amount of arguments for the command %s\n", argv[arg]);
+                            fprintf(stderr, "ERROR: incorrect amount of arguments for the command %s\n", argv[arg]);
                             return EXIT_FAILURE;
                         }
 
                         sRowsStart = atoi(argv[arg + 1]);
                         if (sRowsStart == 0)
                         {
-                            printf("ERROR: incorrect argument #1: %s for the command %s\n", argv[arg + 1], argv[arg]);
+                            fprintf(stderr, "ERROR: incorrect argument #1: %s for the command %s\n", argv[arg + 1], argv[arg]);
                             return EXIT_FAILURE;
                         }
 
@@ -333,7 +333,7 @@ int main(int argc, char* argv[])
                             sRowsEnd = atoi(argv[arg + 2]);
                             if (sRowsEnd == 0)
                             {
-                                printf("ERROR: incorrect argument #2: %s for the command %s\n", argv[arg + 1],
+                                fprintf(stderr, "ERROR: incorrect argument #2: %s for the command %s\n", argv[arg + 1],
                                         argv[arg]);
                                 return EXIT_FAILURE;
                             }
@@ -356,14 +356,14 @@ int main(int argc, char* argv[])
 
                         if (arg + 2 >= argc)
                         {
-                            printf("ERROR: incorrect amount of arguments for the command %s\n", argv[arg]);
+                            fprintf(stderr, "ERROR: incorrect amount of arguments for the command %s\n", argv[arg]);
                             return EXIT_FAILURE;
                         }
 
                         colI = atoi(argv[arg + 1]);
                         if (colI == 0)
                         {
-                            printf("ERROR: incorrect argument #1: %s for the command %s\n", argv[arg + 1], argv[arg]);
+                            fprintf(stderr, "ERROR: incorrect argument #1: %s for the command %s\n", argv[arg + 1], argv[arg]);
                             return EXIT_FAILURE;
                         }
 
@@ -371,7 +371,7 @@ int main(int argc, char* argv[])
                         int isCommand = commandType(argv[arg + 2]);
                         if (isCommand != -1)
                         {
-                            printf("ERROR: incorrect argument #2: unexpected command %s after the command %s\n",
+                            fprintf(stderr, "ERROR: incorrect argument #2: unexpected command %s after the command %s\n",
                                     argv[arg + 2], argv[arg]);
                             return EXIT_FAILURE;
                         }
@@ -397,7 +397,7 @@ int main(int argc, char* argv[])
                 {
                     if (mode == MODE_EDIT_TABLE)
                     {
-                        printf("ERROR: please run commands for editing table separately from commands for editing data\n");
+                        fprintf(stderr, "ERROR: please run commands for editing table separately from commands for editing data\n");
                         return EXIT_FAILURE;
                     }
 
@@ -407,14 +407,14 @@ int main(int argc, char* argv[])
                     {
                         if (arg + 1 >= argc)
                         {
-                            printf("ERROR: incorrect amount of arguments for the command '%s'\n", argv[arg]);
+                            fprintf(stderr, "ERROR: incorrect amount of arguments for the command '%s'\n", argv[arg]);
                             return EXIT_FAILURE;
                         }
 
                         editArg0 = atoi(argv[arg + 1]);
                         if (editArg0 < 1)
                         {
-                            printf("ERROR: incorrect argument #1: %s for the command '%s'\n", argv[arg + 1], argv[arg]);
+                            fprintf(stderr, "ERROR: incorrect argument #1: %s for the command '%s'\n", argv[arg + 1], argv[arg]);
                             return EXIT_FAILURE;
                         }
 
@@ -426,14 +426,14 @@ int main(int argc, char* argv[])
                     {
                         if (arg + 2 >= argc)
                         {
-                            printf("ERROR: incorrect amount of arguments for the command %s\n", argv[arg]);
+                            fprintf(stderr, "ERROR: incorrect amount of arguments for the command %s\n", argv[arg]);
                             return EXIT_FAILURE;
                         }
 
                         editArg0 = atoi(argv[arg + 1]);
                         if (editArg0 < 1)
                         {
-                            printf("ERROR: incorrect argument #1: %s for the command '%s'\n", argv[arg + 1], argv[arg]);
+                            fprintf(stderr, "ERROR: incorrect argument #1: %s for the command '%s'\n", argv[arg + 1], argv[arg]);
                             return EXIT_FAILURE;
                         }
 
@@ -443,7 +443,7 @@ int main(int argc, char* argv[])
                             int isCommand = commandType(argv[arg + 2]);
                             if (isCommand != -1)
                             {
-                                printf("ERROR: incorrect argument #2: unexpected command %s after the command %s\n",
+                                fprintf(stderr, "ERROR: incorrect argument #2: unexpected command %s after the command %s\n",
                                         argv[arg + 2], argv[arg]);
                                 return EXIT_FAILURE;
                             }
@@ -470,7 +470,7 @@ int main(int argc, char* argv[])
                             editArg1 = atoi(argv[arg + 2]);
                             if (editArg1 < 1)
                             {
-                                printf("ERROR: incorrect argument #1: %s for the command '%s'\n", argv[arg + 2],
+                                fprintf(stderr, "ERROR: incorrect argument #1: %s for the command '%s'\n", argv[arg + 2],
                                         argv[arg]);
                                 return EXIT_FAILURE;
                             }
@@ -486,7 +486,7 @@ int main(int argc, char* argv[])
 
     if (mode == MODE_NONE)
     {
-        printf("ERROR: no commands were specified\n");
+        fprintf(stderr, "ERROR: no commands were specified\n");
         return EXIT_FAILURE;
     }
 
@@ -715,7 +715,7 @@ int main(int argc, char* argv[])
                         double number = strtod(columns[editArg0 - 1], &err);
                         if (*err != 0 && !isspace((unsigned char)*err))
                         {
-                            printf("ERROR: expected a number (row %d, column %d)\n", currInputRow, editArg0);
+                            fprintf(stderr, "ERROR: expected a number (row %d, column %d)\n", currInputRow, editArg0);
                             return EXIT_FAILURE;
                         }
                         int res = number >= 0 ? (int)(number + 0.5) : (int)(number - 0.5);
@@ -730,7 +730,7 @@ int main(int argc, char* argv[])
                         double number = strtod(columns[editArg0 - 1], &err);
                         if (*err != 0 && !isspace((unsigned char)*err))
                         {
-                            printf("ERROR: expected a number (row %d, column %d)\n", currInputRow, editArg0);
+                            fprintf(stderr, "ERROR: expected a number (row %d, column %d)\n", currInputRow, editArg0);
                             return EXIT_FAILURE;
                         }
                         int res = (int)number;
