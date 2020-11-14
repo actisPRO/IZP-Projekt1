@@ -747,6 +747,12 @@ int main(int argc, char* argv[])
                 }
                 else if (strcmp(command, "swap") == 0)
                 {
+                    if (editArg0 > editArg1)
+                    {
+                        int temp = editArg1;
+                        editArg1 = editArg0;
+                        editArg0 = temp;
+                    }
                     if (editArg0 < originalCols && editArg1 <= originalCols)
                     {
                         char buff[101] = { 0 };
@@ -757,15 +763,31 @@ int main(int argc, char* argv[])
                 }
                 else if (strcmp(command, "move") == 0)
                 {
-                    if (editArg0 < originalCols && editArg1 <= originalCols)
+                    if (editArg0 < editArg1)
                     {
-                        char buff[101] = { 0 };
-                        strcpy(buff, columns[editArg0 - 1]);
-                        for (int col = editArg0 - 1; col < editArg1 - 2; ++col)
+                        if (editArg0 < originalCols && editArg1 <= originalCols)
                         {
-                            strcpy(columns[col], columns[col + 1]);
+                            char buff[101] = { 0 };
+                            strcpy(buff, columns[editArg0 - 1]);
+                            for (int col = editArg0 - 1; col < editArg1 - 2; ++col)
+                            {
+                                strcpy(columns[col], columns[col + 1]);
+                            }
+                            strcpy(columns[editArg1 - 2], buff);
                         }
-                        strcpy(columns[editArg1 - 2], buff);
+                    }
+                    else if (editArg1 < editArg0) // reverse
+                    {
+                        if (editArg0 <= originalCols && editArg1 < originalCols)
+                        {
+                            char buff[101] = {0};
+                            strcpy(buff, columns[editArg0 - 1]);
+                            for (int col = editArg0 - 1; col >= editArg1 - 1; --col)
+                            {
+                                strcpy(columns[col], columns[col - 1]);
+                            }
+                            strcpy(columns[editArg1 - 1], buff);
+                        }
                     }
                 }
             }
